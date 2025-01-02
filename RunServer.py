@@ -11,21 +11,18 @@ from web3 import Web3
 import os
 from eth_account.messages import encode_defunct
 import uuid
-
 import os
 import sys
-import uuid
 import asyncio
 import websockets
 import struct
 import requests
 import time
-
+import queue
 
 w3 = Web3()
-
-
 ntp_server = "time.google.com"
+
 def get_ntp_time():
     import ntplib
     from time import ctime
@@ -149,7 +146,7 @@ broadcast_ip="127.0.0.1"
 broadcast_port= [3615,4625]
 
 
-byte_queue = list()
+byte_queue = queue.Queue()
 
 
 def relay_iid_message_as_local_udp_thread(byte):
@@ -160,19 +157,20 @@ def relay_iid_message_as_local_udp_thread(byte):
         sock.close()
         
 def byte_to_send_in_queue_count():
-    return len(byte_queue)
+    return byte_queue.qsize()
 
 def pop_byte_from_queue():
-    return byte_queue.pop(0)
+    return byte_queue.get()
 
 def flush_push_udp_queue():
     while byte_to_send_in_queue_count()>0:
-        relay_iid_message_as_local_udp_thread(pop_byte_from_queue())
+        bytes = pop_byte_from_queue()
+        print ("Flush one:", bytes)
+        relay_iid_message_as_local_udp_thread(bytes)
 
-def append_byte_to_queue(byte):
+async def append_byte_to_queue(byte):
     global byte_queue
-    byte_queue.append(byte)
-    print("Waiting to send", byte_to_send_in_queue_count())
+    byte_queue.put(byte)
         
     
         
@@ -193,7 +191,8 @@ async def handle_byte_message(user:UserHandshake, message:bytes):
         elif message_length == 8:
             int_index, int_value = struct.unpack('<ii', message)[0]
         print(f"Relay {user.index} {int_value} {current_time}")
-        append_byte_to_queue(struct.pack('<iiQ', int(user.index), int_value, current_time))
+        await append_byte_to_queue(struct.pack('<iiQ', int(user.index), int_value, current_time))
+        print("A")
         
     elif message_length == 12 or message_length == 16:
         ulong_date =0
@@ -203,8 +202,8 @@ async def handle_byte_message(user:UserHandshake, message:bytes):
         elif message_length == 16:
             int_index, int_value, ulong_date = struct.unpack('<iiQ', message)[0]
         print(f"Relay {user.index} {int_value} {ulong_date}")
-        append_byte_to_queue(struct.pack('<iiQ', user.index, int_value, ulong_date))
-        
+        await append_byte_to_queue(struct.pack('<iiQ', user.index, int_value, ulong_date))
+        print("A")
         
 async def handle_connection(websocket, path):
     debug_print(f"New connection from path {path}")
@@ -218,7 +217,9 @@ async def handle_connection(websocket, path):
     
     try:
         while True:   
+            print("--C-")
             async for message in websocket:
+                print("--B START-")
                 if user.waiting_for_clipboard_sign_message:
                     if not is_message_signed(message):
                         await websocket.send(f"FAIL TO SIGN")
@@ -241,14 +242,16 @@ async def handle_connection(websocket, path):
                         await websocket.close()
                     await websocket.send(f"HELLO {user.index} {user.address}")
                 else:
-                    if isinstance(message, str):
-                        await hangle_text_message(user, message)
-                    else:
-                        await handle_byte_message(user, message)
+                    print("Received message", message)
+                    # if isinstance(message, str):
+                    #     await hangle_text_message(user, message)
+                    # else:
+                    #     await handle_byte_message(user, message)
                     ## ADD LATER
                     # if bool_use_byte_count:
                     #     byte_count(int(user.index), len(message))
-                    
+                
+                print("--B END-")
                     
     except websockets.ConnectionClosed:
         print(f"Connection closed from {websocket.remote_address}")
@@ -278,7 +281,8 @@ def loop_websocket_server():
 def loop_udp_server():
     while True:
         flush_push_udp_queue()
-        time.sleep(0.00001)
+        print("-")
+        time.sleep(1)
 
 
 if __name__ == "__main__":
