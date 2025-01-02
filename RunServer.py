@@ -17,8 +17,8 @@ import asyncio
 import websockets
 import struct
 import requests
-import time
 import queue
+import threading
 
 w3 = Web3()
 ntp_server = "time.google.com"
@@ -31,9 +31,9 @@ def get_ntp_time():
     return response.tx_time
 def get_ntp_time_from_local():
     global millisecond_diff
-    return time.time()*1000+millisecond_diff
+    return asyncio.get_event_loop().time()*1000+millisecond_diff
 ntp_timestmap = get_ntp_time()*1000
-local_timestamp = time.time()*1000
+local_timestamp = asyncio.get_event_loop().time()*1000
 millisecond_diff = ntp_timestmap-local_timestamp
 print(f"ntp_timestmap: {ntp_timestmap}")
 print(f"local_timestamp: {local_timestamp}")
@@ -221,6 +221,8 @@ async def handle_connection(websocket, path):
             async for message in websocket:
                 print("--B START-")
                 if user.waiting_for_clipboard_sign_message:
+                    
+                    print("--A1 START-")
                     if not is_message_signed(message):
                         await websocket.send(f"FAIL TO SIGN")
                         await websocket.close()
@@ -241,6 +243,8 @@ async def handle_connection(websocket, path):
                         await websocket.send(f"GUEST DISABLED")
                         await websocket.close()
                     await websocket.send(f"HELLO {user.index} {user.address}")
+                    print("--A1 END-")
+
                 else:
                     print("Received message", message)
                     # if isinstance(message, str):
@@ -252,20 +256,30 @@ async def handle_connection(websocket, path):
                     #     byte_count(int(user.index), len(message))
                 
                 print("--B END-")
+                
+            print("--D-")
                     
     except websockets.ConnectionClosed:
         print(f"Connection closed from {websocket.remote_address}")
 
 
 async def main():
+    print("MAIN START")
     server = await websockets.serve(handle_connection, "0.0.0.0", 4615)
-    print("WebSocket server started on ws://0.0.0.0:4615")
+    print("MAIN END")
     await server.wait_closed()
-
-
-
+    print("CLOSED")
     
-import threading
+
+async def udp_async_server():
+    int_debug_index=0
+    while True:
+        flush_push_udp_queue()
+        int_debug_index+=1
+        if int_debug_index>1000:
+            print("-")
+            int_debug_index=0
+        await asyncio.sleep(0.0001)
 
 
 def loop_websocket_server():
@@ -276,14 +290,17 @@ def loop_websocket_server():
             print (f"Error in websocket server: {e}")
             traceback.print_exc()
         print ("Restarting websocket server")
-        time.sleep(5)
+        
         
 def loop_udp_server():
-    while True:
-        flush_push_udp_queue()
-        print("-")
-        time.sleep(1)
-
+  while True:
+        try :
+            asyncio.run(udp_async_server())
+        except Exception as e:
+            print (f"UDP PUSHER: {e}")
+            traceback.print_exc()
+        print ("Restarting PUSHER")
+        
 
 if __name__ == "__main__":
     
@@ -294,12 +311,10 @@ if __name__ == "__main__":
     public_ip = get_public_ip()
     print(f"Public IP: {public_ip}")
     
-    thread1= threading.Thread(target=loop_websocket_server)
-    thread2= threading.Thread(target=loop_udp_server)
-    thread1.start()
-    thread2.start()
+    loop = asyncio.get_event_loop()
+    loop.create_task(main())
+    #loop.create_task(udp_async_server())
+    loop.run_forever()
     
-    thread1.join()
-    thread2.join()
 
 
