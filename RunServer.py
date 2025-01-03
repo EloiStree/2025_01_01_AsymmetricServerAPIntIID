@@ -5,6 +5,7 @@
 #import iidwshandshake # https://github.com/EloiStree/2025_01_01_MegaMaskSignInHandshake_Python/tree/main
 
 # pip install web3
+import json
 import socket
 import traceback
 from web3 import Web3
@@ -19,6 +20,12 @@ import struct
 import requests
 import queue
 import threading
+import tornado
+import tornado.ioloop
+import tornado.web
+import tornado.websocket
+
+
 
 w3 = Web3()
 ntp_server = "time.google.com"
@@ -38,6 +45,11 @@ millisecond_diff = ntp_timestmap-local_timestamp
 print(f"ntp_timestmap: {ntp_timestmap}")
 print(f"local_timestamp: {local_timestamp}")
 print(f"diff: {millisecond_diff}")
+
+allow_text_message = False
+int_max_byte_size = 16
+int_max_char_size = 16
+
 
 
 
@@ -71,16 +83,7 @@ print(f"Byte size of user_index_to_address: {dict_size}, {dico_size_in_mo} Mo")
 
 
 
-bool_use_byte_count = True
-byte_count_ip="127.0.0.1"
-byte_count_port=666
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-byte_count_target=  (byte_count_ip, byte_count_port)
 
-async def byte_count(index_integer:int, byte_count:int):
-    byte = struct.pack('<ii', index_integer, byte_count)
-    sock.sendto(byte, byte_count_target)
-    
     
 
 
@@ -132,12 +135,15 @@ def debug_print(text):
         print(text)
         
         
-bool_only_byte_server = False
-int_max_byte_size = 16
-async def hangle_text_message(user:UserHandshake, message:str):
-    if not bool_only_byte_server:
-        user.websocket.send(f"ONLY BYTE SERVER AND MAX:{int_max_byte_size}")
-        user.websocket.send(f"RTFM:{RTFM}") 
+async def hangle_text_message(user: UserHandshake, message: str):
+    if not allow_text_message:
+        await user.websocket.write_message(f"ONLY BYTE SERVER AND MAX:{int_max_byte_size}")
+        await user.websocket.write_message(f"RTFM:{RTFM}")
+        user.websocket.close()
+        return
+    if len(message) > int_max_char_size:
+        await user.websocket.write_message(f"MAX TEXT SIZE {int_max_char_size}")
+        await user.websocket.write_message(f"RTFM:{RTFM}")
         user.websocket.close()
         return
     print("Received text message", message)
@@ -173,124 +179,115 @@ async def append_byte_to_queue(byte):
     byte_queue.put(byte)
         
     
-        
     
-async def handle_byte_message(user:UserHandshake, message:bytes):
-    message_length = len(message)
-    if message_length> int_max_byte_size:
-        user.websocket.send(f"MAX BYE SIZE {int_max_byte_size}")
-        user.websocket.send(f"RTFM:{RTFM}") 
-        user.websocket.close()
-        return
     
-    if message_length == 4 or message_length == 8:
-        current_time =int( get_ntp_time_from_local() )
-        int_value =0
-        if message_length == 4:
-            int_value = struct.unpack('<i', message)[0]
-        elif message_length == 8:
-            int_index, int_value = struct.unpack('<ii', message)[0]
-        print(f"Relay {user.index} {int_value} {current_time}")
-        await append_byte_to_queue(struct.pack('<iiQ', int(user.index), int_value, current_time))
-        print("A")
-        
-    elif message_length == 12 or message_length == 16:
-        ulong_date =0
-        int_value =0
-        if message_length == 12:
-            int_value, ulong_date = struct.unpack('<iQ', message)[0]
-        elif message_length == 16:
-            int_index, int_value, ulong_date = struct.unpack('<iiQ', message)[0]
-        print(f"Relay {user.index} {int_value} {ulong_date}")
-        await append_byte_to_queue(struct.pack('<iiQ', user.index, int_value, ulong_date))
-        print("A")
-        
-async def handle_connection(websocket, path):
-    debug_print(f"New connection from path {path}")
-    debug_print(f"New connection from address {websocket.remote_address}")
-    user : UserHandshake = UserHandshake()
-    user.remote_address = websocket.remote_address    
-    user.websocket= websocket
-    await websocket.send(f"MANUAL:{RTFM}")
-    await websocket.send(f"SIGN:{user.handshake_guid}")
-    user.waiting_for_clipboard_sign_message = True
+def user_to_json(user):
+                return json.dumps(user.__dict__, indent=4, default=str)  
     
-    try:
-        while True:   
-            print("--C-")
-            async for message in websocket:
-                print("--B START-")
-                if user.waiting_for_clipboard_sign_message:
-                    
-                    print("--A1 START-")
-                    if not is_message_signed(message):
-                        await websocket.send(f"FAIL TO SIGN")
-                        await websocket.close()
-                    address = get_address_from_signed_message(message)
-                    print (f"User {user.address} signed the handshake")
-                   
-                    user.address = address
-                    if address not in user_address_to_index:
-                        await websocket.send(f"ASK ADMIN FOR A CLAIM TO BE ADDED")
-                        await websocket.send(f"RTFM:{RTFM}")
-                        await websocket.close()
-                    user.index =int( user_address_to_index[address])
-                    user.is_verified = True
-                    user.waiting_for_clipboard_sign_message = False
-                    guid_handshake[user.handshake_guid] = user
-                    
-                    if not bool_allow_guest_user and user.index <0:
-                        await websocket.send(f"GUEST DISABLED")
-                        await websocket.close()
-                    await websocket.send(f"HELLO {user.index} {user.address}")
-                    print("--A1 END-")
+class WebSocketHandler(tornado.websocket.WebSocketHandler):
+        def open(self):
+            print("WebSocket opened")
+            self.user = UserHandshake()
+            self.user.websocket = self
+            self.user.handshake_guid = uuid.uuid4()
+            self.write_message(f"SIGN:{self.user.handshake_guid}")
+            self.user.waiting_for_clipboard_sign_message = True
+            self.user.remote_address = self.request.remote_ip
+            print (f"New connection from {self.user.remote_address}")
+ 
+            print(user_to_json(self.user))
+            
 
+        async def on_message(self, message):
+            
+            if self.user.waiting_for_clipboard_sign_message:
+                if not isinstance(message, str):
+                    print ("R", message)
+                    return
+                
+                print(f"Sign in message received: {message}")
+                if not is_message_signed(message):
+                    await self.write_message("FAIL TO SIGN")
+                    self.close()
+                    return
+                address = get_address_from_signed_message(message)
+                print(f"User {address} signed the handshake")
+                self.user.address = address
+                if address not in user_address_to_index:
+                    await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED")
+                    await self.write_message(f"RTFM:{RTFM}")
+                    self.close()
+                    return
+                self.user.index = int(user_address_to_index[address])
+                self.user.is_verified = True
+                guid_handshake[self.user.handshake_guid] = self.user
+                if not bool_allow_guest_user and self.user.index < 0:
+                    await self.write_message("GUEST DISABLED")
+                    self.close()
+                    return
+                self.user.waiting_for_clipboard_sign_message = False
+                await self.write_message(f"HELLO {self.user.index} {self.user.address}")
+            else:
+                # print("Received message", message)
+                if isinstance(message, str):
+                    await hangle_text_message(self.user, message)
                 else:
-                    print("Received message", message)
-                    # if isinstance(message, str):
-                    #     await hangle_text_message(user, message)
-                    # else:
-                    #     await handle_byte_message(user, message)
-                    ## ADD LATER
-                    # if bool_use_byte_count:
-                    #     byte_count(int(user.index), len(message))
-                
-                print("--B END-")
-                
-            print("--D-")
-                    
-    except websockets.ConnectionClosed:
-        print(f"Connection closed from {websocket.remote_address}")
+                    await handle_byte_message(self.user, message)
 
+        def on_close(self):
+            print("WebSocket closed")
 
-async def main():
-    print("MAIN START")
-    server = await websockets.serve(handle_connection, "0.0.0.0", 4615)
-    print("MAIN END")
-    await server.wait_closed()
-    print("CLOSED")
+        def check_origin(self, origin):
+            return True
     
+def make_app():
+    return tornado.web.Application([
+        (r"/", WebSocketHandler),  # WebSocket endpoint
+    ])    
 
-async def udp_async_server():
+async def handle_byte_message(user: UserHandshake, message: bytes):
+        message_length = len(message)
+        if message_length > int_max_byte_size:
+            await user.websocket.write_message(f"MAX BYTE SIZE {int_max_byte_size}")
+            await user.websocket.write_message(f"RTFM:{RTFM}")
+            user.websocket.close()
+            return
+
+        if message_length == 4 or message_length == 8:
+            current_time = int(get_ntp_time_from_local())
+            int_value = 0
+            if message_length == 4:
+                int_value = struct.unpack('<i', message)[0]
+            elif message_length == 8:
+                int_index, int_value = struct.unpack('<ii', message)
+            print(f"Relay {user.index} {int_value} {current_time}")
+            await append_byte_to_queue(struct.pack('<iiQ', int(user.index), int_value, current_time))
+            print("A")
+
+        elif message_length == 12 or message_length == 16:
+            ulong_date = 0
+            int_value = 0
+            if message_length == 12:
+                int_value, ulong_date = struct.unpack('<iQ', message)
+            elif message_length == 16:
+                int_index, int_value, ulong_date = struct.unpack('<iiQ', message)
+            print(f"Relay {user.index} {int_value} {ulong_date}")
+            await append_byte_to_queue(struct.pack('<iiQ', user.index, int_value, ulong_date))
+            print("A")
+
+def udp_async_server():
+    import time
     int_debug_index=0
     while True:
         flush_push_udp_queue()
         int_debug_index+=1
-        if int_debug_index>1000:
+        if int_debug_index>10000:
             print("-")
             int_debug_index=0
-        await asyncio.sleep(0.0001)
+        time.sleep(0.0001)
 
 
-def loop_websocket_server():
-    while True:
-        try :
-            asyncio.run(main())
-        except Exception as e:
-            print (f"Error in websocket server: {e}")
-            traceback.print_exc()
-        print ("Restarting websocket server")
-        
+
         
 def loop_udp_server():
   while True:
@@ -311,10 +308,16 @@ if __name__ == "__main__":
     public_ip = get_public_ip()
     print(f"Public IP: {public_ip}")
     
-    loop = asyncio.get_event_loop()
-    loop.create_task(main())
-    #loop.create_task(udp_async_server())
-    loop.run_forever()
+    server_thread = threading.Thread(target=udp_async_server)
+    server_thread.daemon = True 
+    server_thread.start()
+    
+    app = make_app()
+    app.listen(4615)  
+    print("Server started on ws://0.0.0.0:4615/")
+    tornado.ioloop.IOLoop.current().start()
+ 
+    
     
 
 
