@@ -73,7 +73,18 @@ RTFM= "https://github.com/EloiStree/2025_01_01_MegaMaskSignInHandshake_Python.gi
 print("Hello World Python IID Listen Server")
 user_index_public_index_file = "/git/APIntIO_Claim/Claims"
 
+
+# If you are like 1-30 address, in code add could be usefull
+# But you should prefer a file system if possible.
+additionnal_in_code_add="""
+-56:0x0AD2FFA0A42d43B10f848ED07604a1737c1c07Cb
+-57:0xDa3239C8ad5C321A1411F3acC2C1f9F8C9D34ECE
+"""
+
+## If false, the user with index < 0 will be rejected
+# -integer index are key given to allow guest to use the server
 bool_allow_guest_user = True
+
 
 # read the file
 user_index_to_address={}
@@ -95,6 +106,12 @@ for key, value in user_index_to_address.items():
 dico_size_in_mo = int(int(dict_size) / 1024 / 1024*10000) / 10000
 print(f"Byte size of user_index_to_address: {dict_size}, {dico_size_in_mo} Mo")
 
+for line in additionnal_in_code_add.split("\n"):
+    if len(line)>0:
+        index, address = line.split(":")
+        user_index_to_address[index] = address
+        user_address_to_index[address] = index
+        print(f"In code Add {index} {address}")
 
 
 
