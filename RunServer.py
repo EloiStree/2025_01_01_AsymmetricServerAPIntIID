@@ -7,7 +7,9 @@
 # https://github.com/EloiStree/2025_01_01_MegaMaskSignInHandshake_Python
 # import iidwshandshake 
 
-# pip install web3
+# 
+# pip install web3 eth-account websockets requests tornado --break-system-packages 
+# 
 import json
 import socket
 import traceback
