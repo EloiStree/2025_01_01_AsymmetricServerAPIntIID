@@ -2,7 +2,10 @@
 # THIS IS NOT DESIGN FOR A BIG COMMUNITY, ELSE YOU WILL NEED RUST CODE AND  FOLK
 
 
-#import iidwshandshake # https://github.com/EloiStree/2025_01_01_MegaMaskSignInHandshake_Python/tree/main
+
+
+# https://github.com/EloiStree/2025_01_01_MegaMaskSignInHandshake_Python
+# import iidwshandshake 
 
 # pip install web3
 import json
@@ -51,6 +54,18 @@ int_max_byte_size = 16
 int_max_char_size = 16
 
 
+bool_allow_coaster =True
+# I NEED TO ADD A FEATURE THAT LOAD THE COASTER FROM A FILE
+# If no allow identify, the coaster need to be added in the file
+bool_allow_unidentify_coaster=True
+
+
+# To avoid bottle neck, we can use multiple server
+# Some script are they to relay the message received.
+# Some script are they to send the message to the listener of an index
+# Listener are more complexe that relay.
+# The feature here should be disable. But by simplicity, I let it here for now.
+bool_use_as_listener_to=True
 
 
 RTFM= "https://github.com/EloiStree/2025_01_01_MegaMaskSignInHandshake_Python.git"
@@ -116,8 +131,8 @@ def get_address_from_signed_message(given_message):
 
 class UserHandshake:
     def __init__(self):
-        self.index:int = index
-        self.address:str = address
+        self.index:int = 0
+        self.address:str = ""
         self.handshake_guid:str = uuid.uuid4()
         self.remote_address:str = None          
         self.waiting_for_clipboard_sign_message:bool = False
@@ -127,7 +142,8 @@ class UserHandshake:
         
         
                 
-guid_handshake = {}
+guid_handshake_to_valide_user = {}
+index_handshake_to_valide_user_list = {}
 
 bool_use_debug_print = True
 def debug_print(text):
@@ -147,6 +163,12 @@ async def hangle_text_message(user: UserHandshake, message: str):
         user.websocket.close()
         return
     print("Received text message", message)
+    # if bool_use_as_listener_to:
+    #     index = str(user.index)
+    #     if index in index_handshake_to_valide_user_list:
+    #         for user in index_handshake_to_valide_user_list[index]:
+    #             if user.websocket is not None and not user.websocket.closed:
+    #                 await user.io
 
 broadcast_ip="127.0.0.1"
 broadcast_port= [3615,4625]
@@ -174,22 +196,44 @@ def flush_push_udp_queue():
         print ("Flush one:", bytes)
         relay_iid_message_as_local_udp_thread(bytes)
 
-async def append_byte_to_queue(byte):
+async def append_byte_to_queue(user: UserHandshake,  byte_to_push:bytes):
     global byte_queue
-    byte_queue.put(byte)
+    byte_queue.put(byte_to_push)
+
+    if bool_use_as_listener_to:
+        index = str(user.index)
+        print(f"Push to index {index}")
+        if index in index_handshake_to_valide_user_list:
+            for user_in_list in index_handshake_to_valide_user_list[index]:
+                if user_in_list is not user:
+                    if user_in_list.websocket is not None and not user_in_list.websocket.close_code:
+                        tornado.ioloop.IOLoop.current().add_callback(user_in_list.websocket.write_message, byte_to_push, binary=True)
         
     
     
     
 def user_to_json(user):
                 return json.dumps(user.__dict__, indent=4, default=str)  
-    
+
+
+def add_user_to_index(user: UserHandshake):
+    index_str = str(user.index)
+    if index_str not in index_handshake_to_valide_user_list:
+        index_handshake_to_valide_user_list[index_str] = []
+    index_handshake_to_valide_user_list[index_str].append(user)
+    print (f"Add user to index {user.index} {len(index_handshake_to_valide_user_list[index_str])}")
+
+def remove_user_from_index(user: UserHandshake):
+    if user.index in index_handshake_to_valide_user_list:
+        index_handshake_to_valide_user_list[user.index].remove(user)
+        print (f"Remove user from index {user.index} {len(index_handshake_to_valide_user_list[user.index])}")
+
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
         def open(self):
             print("WebSocket opened")
             self.user = UserHandshake()
             self.user.websocket = self
-            self.user.handshake_guid = uuid.uuid4()
+            self.user.handshake_guid = str(uuid.uuid4())
             self.write_message(f"SIGN:{self.user.handshake_guid}")
             self.user.waiting_for_clipboard_sign_message = True
             self.user.remote_address = self.request.remote_ip
@@ -200,33 +244,88 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         async def on_message(self, message):
             
+            print("T ", message)
             if self.user.waiting_for_clipboard_sign_message:
                 if not isinstance(message, str):
                     print ("R", message)
                     return
+                split_message = message.split("|")
+                split_lenght = len(split_message)
+                for i in range(split_lenght):
+                    split_message[i] = split_message[i].strip()
+                to_signed_guid = split_message[0]
+                if split_lenght>1:
+                    if not to_signed_guid.index(self.user.handshake_guid)==0:
+                        print(f"GUID MISMATCH\n#{to_signed_guid}\n#{self.user.handshake_guid}")
+                        await self.write_message("GUID MISMATCH")
+                        return
+                    
+                if split_lenght == 3:
+                    print ("Try to log as admin")
+                    print(f"Sign in message received: {message}")
+                    if not is_message_signed(message):
+                        await self.write_message("FAIL TO SIGN")
+                        self.close()
+                        return
+                    address = get_address_from_signed_message(message)
+                    print(f"User {address} signed the handshake")
+                    self.user.address = address
+                    if address not in user_address_to_index:
+                        await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED")
+                        await self.write_message(f"RTFM:{RTFM}")
+                        self.close()
+                        return
+                    self.user.index = int(user_address_to_index[address])
+                    self.user.is_verified = True
+                    guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
+                    if not bool_allow_guest_user and self.user.index < 0:
+                        await self.write_message("GUEST DISABLED")
+                        self.close()
+                        return
+                    self.user.waiting_for_clipboard_sign_message = False
+                    add_user_to_index(self.user)
+                    await self.write_message(f"HELLO {self.user.index} {self.user.address}")
+                if split_lenght == 5:
+                    print ("Try to log as coaster key")
+                    # 0:guid, 
+                    # 1:coaster_address,
+                    # 2:signature_by_coaster,
+                    # 3:admin_address, 
+                    # 4:signature_letter_maque
+                    coaster_address = split_message[1]
+                    signed_guid_by_coaster_address = split_message[2]
+                    admin_address = split_message[3]
+                    signature_letter_maque = split_message[4]
                 
-                print(f"Sign in message received: {message}")
-                if not is_message_signed(message):
-                    await self.write_message("FAIL TO SIGN")
-                    self.close()
-                    return
-                address = get_address_from_signed_message(message)
-                print(f"User {address} signed the handshake")
-                self.user.address = address
-                if address not in user_address_to_index:
-                    await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED")
-                    await self.write_message(f"RTFM:{RTFM}")
-                    self.close()
-                    return
-                self.user.index = int(user_address_to_index[address])
-                self.user.is_verified = True
-                guid_handshake[self.user.handshake_guid] = self.user
-                if not bool_allow_guest_user and self.user.index < 0:
-                    await self.write_message("GUEST DISABLED")
-                    self.close()
-                    return
-                self.user.waiting_for_clipboard_sign_message = False
-                await self.write_message(f"HELLO {self.user.index} {self.user.address}")
+                    if admin_address not in user_address_to_index:
+                        await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED: "+admin_address)
+                        await self.write_message(f"RTFM:{RTFM}")
+                        self.close()
+                        return
+
+                    if not is_message_signed_from_params(coaster_address, admin_address, signature_letter_maque):
+                        await self.write_message("LETTER MARQUE SIGNATURE INVALID")
+                        self.close()
+                        return
+                    
+                    if not is_message_signed_from_params(to_signed_guid, coaster_address, signed_guid_by_coaster_address):
+                        await self.write_message("GUID NOT SIGNED BY COASTER")
+                        self.close()
+                        return
+                    await self.write_message(f"COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
+
+
+                    self.user.address = admin_address
+                    self.user.index = int(user_address_to_index[self.user.address])
+                    self.user.is_verified = True
+                    guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
+                    if not bool_allow_guest_user and self.user.index < 0:
+                        await self.write_message("GUEST DISABLED")
+                        self.close()
+                        return
+                    self.user.waiting_for_clipboard_sign_message = False
+                    add_user_to_index(self.user)
+                    await self.write_message(f"HELLO {self.user.index} {self.user.address} {coaster_address}")
             else:
                 # print("Received message", message)
                 if isinstance(message, str):
@@ -236,6 +335,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         def on_close(self):
             print("WebSocket closed")
+            remove_user_from_index(self.user)
 
         def check_origin(self, origin):
             return True
@@ -261,7 +361,7 @@ async def handle_byte_message(user: UserHandshake, message: bytes):
             elif message_length == 8:
                 int_index, int_value = struct.unpack('<ii', message)
             print(f"Relay {user.index} {int_value} {current_time}")
-            await append_byte_to_queue(struct.pack('<iiQ', int(user.index), int_value, current_time))
+            await append_byte_to_queue(user,struct.pack('<iiQ', int(user.index), int_value, current_time))
             print("A")
 
         elif message_length == 12 or message_length == 16:
@@ -272,7 +372,7 @@ async def handle_byte_message(user: UserHandshake, message: bytes):
             elif message_length == 16:
                 int_index, int_value, ulong_date = struct.unpack('<iiQ', message)
             print(f"Relay {user.index} {int_value} {ulong_date}")
-            await append_byte_to_queue(struct.pack('<iiQ', user.index, int_value, ulong_date))
+            await append_byte_to_queue(user,struct.pack('<iiQ', user.index, int_value, ulong_date))
             print("A")
 
 def udp_async_server():
