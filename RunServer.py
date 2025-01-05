@@ -9,7 +9,7 @@
 
 # 
 # pip install web3 eth-account websockets requests tornado --break-system-packages 
-# 
+# pip install ntplib --break-system-packages
 import json
 import socket
 import traceback
@@ -92,10 +92,7 @@ bool_allow_guest_user = True
 user_index_to_address={}
 user_address_to_index={}
 
-
-
-# if file exists
-if True:
+if os.path.exists(user_index_public_index_file):
     with open(user_index_public_index_file, 'r') as file:
         text = file.read()
         lines = text.split("\n")
@@ -104,7 +101,8 @@ if True:
                 index, address = line.split(":")
                 user_index_to_address[index] = address
                 user_address_to_index[address] = index
-                
+
+            
 print (f"Claimed index: {len(user_index_to_address)}")
 dict_size = sys.getsizeof(user_index_to_address)
 for key, value in user_index_to_address.items():
