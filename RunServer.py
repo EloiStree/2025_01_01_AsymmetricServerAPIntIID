@@ -90,15 +90,17 @@ bool_allow_guest_user = True
 user_index_to_address={}
 user_address_to_index={}
 
-with open(user_index_public_index_file, 'r') as file:
-    text = file.read()
-    lines = text.split("\n")
-    for line in lines[:20]:
-        if ":" in line:
-            index, address = line.split(":")
-            user_index_to_address[index] = address
-            user_address_to_index[address] = index
-            
+# if file exists
+if True:
+    with open(user_index_public_index_file, 'r') as file:
+        text = file.read()
+        lines = text.split("\n")
+        for line in lines[:20]:
+            if ":" in line:
+                index, address = line.split(":")
+                user_index_to_address[index] = address
+                user_address_to_index[address] = index
+                
 print (f"Claimed index: {len(user_index_to_address)}")
 dict_size = sys.getsizeof(user_index_to_address)
 for key, value in user_index_to_address.items():
