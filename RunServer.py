@@ -10,6 +10,62 @@
 # 
 # pip install web3 eth-account websockets requests tornado --break-system-packages 
 # pip install ntplib --break-system-packages
+
+
+
+
+# Debian: /lib/systemd/system/apintio_push_iid.service
+# sudo nano /lib/systemd/system/apintio_push_iid.service
+"""
+[Unit]
+Description=APIntIO Push IID Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /git/push_iid/RunServer.py
+Restart=always
+User=root
+WorkingDirectory=/git/push_iid
+
+[Install]
+WantedBy=multi-user.target
+"""
+#1h
+# sudo nano /etc/systemd/system/apintio_push_iid.timer
+"""
+[Unit]
+Description=APIntIO Push IID Timer
+
+[Timer]
+OnBootSec=0min
+OnUnitActiveSec=10s
+
+[Install]
+WantedBy=timers.target
+"""
+
+# cd /lib/systemd/system/
+# sudo systemctl daemon-reload
+# sudo systemctl enable apintio_push_iid.service
+# chmod +x /git/push_iid/RunServer.py
+# sudo systemctl enable apintio_push_iid.service
+# sudo systemctl start apintio_push_iid.service
+# sudo systemctl status apintio_push_iid.service
+# sudo systemctl stop apintio_push_iid.service
+# sudo systemctl restart apintio_push_iid.service
+# sudo systemctl enable apintio_push_iid.timer
+# sudo systemctl start apintio_push_iid.timer
+# sudo systemctl status apintio_push_iid.timer
+# sudo systemctl list-timers | grep apintio_push_iid
+
+
+
+
+
+
+
+
 import json
 import socket
 import traceback
@@ -31,6 +87,14 @@ import tornado.web
 import tornado.websocket
 
 
+from VerifyBit4096B58Pkcss1SHA256 import is_verify_b58rsa4096_signature
+from VerifyBit4096B58Pkcss1SHA256 import is_verify_b58rsa4096_signature_no_letter_marque
+
+
+
+# When you do some game you can trust user.
+# This option override the NTP date with the server date if in the past.
+bool_override_ntp_past_date=False
 
 w3 = Web3()
 ntp_server = "time.google.com"
@@ -81,12 +145,34 @@ user_index_public_index_file = "/git/APIntIO_Claim/Claims"
 additionnal_in_code_add="""
 -56:0x0AD2FFA0A42d43B10f848ED07604a1737c1c07Cb
 -57:0xDa3239C8ad5C321A1411F3acC2C1f9F8C9D34ECE
+-85:0xDa3239C8ad5C321A1411F3acC2C1f9F8C9D34ECE
+"""
+
+coaster_ed25519_in_code_add="""
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIS2syCcYRDf+O0sn+goxBnb6tKjYPZo6F0q/95TcPrd|0xDa3239C8ad5C321A1411F3acC2C1f9F8C9D34ECE|0x6d873c994f8ea65bb12724a5cb36d766814332c40f6ae880c6c08d54790ae83f08fda250c8e4e1d31e0c4a29ac7d94aea25624fcbc6d845173ea5cbe3028de6d1c
+"""
+
+unity_rsa_4096_in_code_add="""
+
+-99:pBit4096B58Pkcs1SHA2568arQkFZ8ZJYKVVkCiefn9ckvmUDmF9Hy5YEoNn4FoJn61B7bP9fFwYxWMGQpZJAD2374pnfxqaj5aThoR2j5SJk8TpScHwGThbJkfwDogkVoW523YTxP69LiZkE92qcgsrcSYZfkoqFtyFXVVkN9m5o3SDNNy2pSN9eygZGvvGigJMkXGb8xREGAmvkPt8XV79UbxvoooN1HaTRJu6LwiTJ41zFrGfyZnxMVgeRsxa3brrTpYoxt2hvh1otJ3HxajWeFfvqysYadKzoC1u54C7AuZPCpSkUbzEgERDLC5f5fqJ8LTdcTsubrC5BFQZQK6YBGN3PycYEy
+
 """
 
 ## If false, the user with index < 0 will be rejected
 # -integer index are key given to allow guest to use the server
 bool_allow_guest_user = True
 
+
+## All my tools and code are around Integer Index and Ethereum Address Sign and Verify.
+# RSA is still in the project because ECC is not natively in Unity3D.
+# You can allows RSA user when you want to reduce friction but you should prefer ECC with MetaMask.
+bool_allow_rsa_user = True
+
+
+additionnal_rsa_b58key_in_code_add = """
+
+
+"""
 
 # read the file
 user_index_to_address={}
@@ -102,7 +188,7 @@ if os.path.exists(user_index_public_index_file):
                 user_index_to_address[index] = address
                 user_address_to_index[address] = index
 
-            
+
 print (f"Claimed index: {len(user_index_to_address)}")
 dict_size = sys.getsizeof(user_index_to_address)
 for key, value in user_index_to_address.items():
@@ -117,6 +203,16 @@ for line in additionnal_in_code_add.split("\n"):
         user_address_to_index[address] = index
         print(f"In code Add {index} {address}")
 
+
+if bool_allow_rsa_user:
+    for line in unity_rsa_4096_in_code_add.split("\n"):
+        if len(line)>0:
+            index, address = line.split(":")
+            user_index_to_address[index] = address.strip()
+            user_address_to_index[address] = index.strip()
+            print(f"In code Add {index} {address}")
+
+# def is_message_signed_rsa(message, address, signature):
 
 
 
@@ -159,6 +255,7 @@ class UserHandshake:
         self.waiting_for_clipboard_sign_message:bool = False
         self.is_verified:bool = False       
         self.websocket= None       
+        self.exit_handler=False
         
         
         
@@ -217,6 +314,20 @@ def flush_push_udp_queue():
         print ("Flush one:", bytes)
         relay_iid_message_as_local_udp_thread(bytes)
 
+async def push_byte_or_close( user: UserHandshake,  bytes: bytes):
+    if user.websocket is None:
+        return
+    try:
+        await user.websocket.write_message(bytes, binary=True)
+    except tornado.websocket.WebSocketClosedError:
+        print(f"WebSocketClosedError: Connection closed for user {user.index}")
+        user.websocket.close()
+
+"""
+The IID send to be broadcaster to listeners is also send back to the sender.
+(If the optoin of listener is on)
+"""
+bool_push_back_to_sender_bytes = True
 async def append_byte_to_queue(user: UserHandshake,  byte_to_push:bytes):
     global byte_queue
     byte_queue.put(byte_to_push)
@@ -226,11 +337,20 @@ async def append_byte_to_queue(user: UserHandshake,  byte_to_push:bytes):
         print(f"Push to index {index}")
         if index in index_handshake_to_valide_user_list:
             for user_in_list in index_handshake_to_valide_user_list[index]:
-                if user_in_list is not user:
-                    if user_in_list.websocket is not None and not user_in_list.websocket.close_code:
-                        tornado.ioloop.IOLoop.current().add_callback(user_in_list.websocket.write_message, byte_to_push, binary=True)
+                if not bool_push_back_to_sender_bytes and user_in_list is user:
+                    continue
+                if user_in_list.websocket is not None and not user_in_list.websocket.close_code:
+                        # tornado.ioloop.IOLoop.current().add_callback(push_byte_or_close,user, byte_to_push )
+                        await push_byte_or_close(user_in_list, byte_to_push)
+                else:
+                    user_in_list.m_exit_handler=True
         
-    
+
+def is_ethereum_address(address):
+    return address.startswith("0x") and len(address) == 42
+
+def is_b58_rsa_address(address):
+    return address.startswith("pBit4096B58Pkcs1SHA256")
     
     
 def user_to_json(user):
@@ -254,6 +374,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             print("WebSocket opened")
             self.user = UserHandshake()
             self.user.websocket = self
+            self.user.exit_handler=False
             self.user.handshake_guid = str(uuid.uuid4())
             self.write_message(f"SIGN:{self.user.handshake_guid}")
             self.user.waiting_for_clipboard_sign_message = True
@@ -264,7 +385,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             
 
         async def on_message(self, message):
-            
+            global user_address_to_index
+            global user_index_to_address
+
             print("T ", message)
             if self.user.waiting_for_clipboard_sign_message:
                 if not isinstance(message, str):
@@ -279,75 +402,155 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                     if not to_signed_guid.index(self.user.handshake_guid)==0:
                         print(f"GUID MISMATCH\n#{to_signed_guid}\n#{self.user.handshake_guid}")
                         await self.write_message("GUID MISMATCH")
-                        return
-                    
-                if split_lenght == 3:
-                    print ("Try to log as admin")
-                    print(f"Sign in message received: {message}")
-                    if not is_message_signed(message):
-                        await self.write_message("FAIL TO SIGN")
                         self.close()
-                        return
-                    address = get_address_from_signed_message(message)
-                    print(f"User {address} signed the handshake")
-                    self.user.address = address
-                    if address not in user_address_to_index:
-                        await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED")
-                        await self.write_message(f"RTFM:{RTFM}")
-                        self.close()
-                        return
-                    self.user.index = int(user_address_to_index[address])
-                    self.user.is_verified = True
-                    guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
-                    if not bool_allow_guest_user and self.user.index < 0:
-                        await self.write_message("GUEST DISABLED")
-                        self.close()
-                        return
-                    self.user.waiting_for_clipboard_sign_message = False
-                    add_user_to_index(self.user)
-                    await self.write_message(f"HELLO {self.user.index} {self.user.address}")
-                if split_lenght == 5:
-                    print ("Try to log as coaster key")
-                    # 0:guid, 
-                    # 1:coaster_address,
-                    # 2:signature_by_coaster,
-                    # 3:admin_address, 
-                    # 4:signature_letter_maque
-                    coaster_address = split_message[1]
-                    signed_guid_by_coaster_address = split_message[2]
-                    admin_address = split_message[3]
-                    signature_letter_maque = split_message[4]
                 
-                    if admin_address not in user_address_to_index:
-                        await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED: "+admin_address)
-                        await self.write_message(f"RTFM:{RTFM}")
-                        self.close()
                         return
 
-                    if not is_message_signed_from_params(coaster_address, admin_address, signature_letter_maque):
-                        await self.write_message("LETTER MARQUE SIGNATURE INVALID")
-                        self.close()
-                        return
+                if split_lenght == 3:
+                    address = split_message[1].strip()
+                    if is_verify_b58rsa4096_signature_no_letter_marque(to_signed_guid, message) and bool_allow_rsa_user:
+                        
+                        """
+                        THE RSA ADDRESS IS VALIDE AND DONT USER LETTER MARQUE
+                        THE SERVER IS SET TO ALLOW RSA ONLY USER
+                        """
+                        print(f"User {address} signed the handshake")
+                        self.user.address = address
+                        if address not in user_address_to_index:
+                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED")
+                            await self.write_message(f"RTFM:{RTFM}")
+                            self.close()
+                            return
+
+                        self.user.index = int(user_address_to_index[address])
+                        self.user.is_verified = True
+                        guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
+                        if not bool_allow_guest_user and self.user.index < 0:
+                            await self.write_message("GUEST DISABLED")
+                            self.close()
+                            return
+                        self.user.waiting_for_clipboard_sign_message = False
+                        add_user_to_index(self.user)
+                        await self.write_message(f"HELLO {self.user.index} {self.user.address}")
+
+                    elif is_ethereum_address(address):
+                        """
+                        CHECK IF THE ADDRESS IS A VALIDE ETHEREUM ADDRESS
+                        """
+
+                        print ("Try to log as admin")
+                        print(f"Sign in message received: {message}")
+                        if not is_message_signed(message):
+                            await self.write_message("FAIL TO SIGN")
+                            self.close()
+                            return
+                        address = get_address_from_signed_message(message)
+                        print(f"User {address} signed the handshake")
+                        self.user.address = address
+                        if address not in user_address_to_index:
+                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED")
+                            await self.write_message(f"RTFM:{RTFM}")
+                            self.close()
+                            return
+                        self.user.index = int(user_address_to_index[address])
+                        self.user.is_verified = True
+                        guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
+                        if not bool_allow_guest_user and self.user.index < 0:
+                            await self.write_message("GUEST DISABLED")
+                            self.close()
+                            return
+                        self.user.waiting_for_clipboard_sign_message = False
+                        add_user_to_index(self.user)
+                        await self.write_message(f"HELLO {self.user.index} {self.user.address}")
+
+                elif split_lenght == 5 :
+                    if is_verify_b58rsa4096_signature(to_signed_guid, message):
+                        """
+                        THE ADDRESS IS A RSA COASTER ADDRESS POINTING TO A ETHEREUM ADDRESS AND IS VALIDE
+                        """
+                        await self.write_message("VALIDE GUID SIGN IN")
+                       
+                        # 0:guid, 
+                        # 1:coaster_address,
+                        # 2:signature_by_coaster,
+                        # 3:admin_address, 
+                        # 4:signature_letter_maque
+                        coaster_address = split_message[1]
+                        admin_address = split_message[3]
+                        signature_letter_maque = split_message[4]
                     
-                    if not is_message_signed_from_params(to_signed_guid, coaster_address, signed_guid_by_coaster_address):
-                        await self.write_message("GUID NOT SIGNED BY COASTER")
-                        self.close()
-                        return
-                    await self.write_message(f"COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
+                        if admin_address not in user_address_to_index:
+                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED: "+admin_address)
+                            await self.write_message(f"RTFM:{RTFM}")
+                            self.close()
+                            return
+
+                        await self.write_message(f"COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
 
 
-                    self.user.address = admin_address
-                    self.user.index = int(user_address_to_index[self.user.address])
-                    self.user.is_verified = True
-                    guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
-                    if not bool_allow_guest_user and self.user.index < 0:
-                        await self.write_message("GUEST DISABLED")
-                        self.close()
-                        return
-                    self.user.waiting_for_clipboard_sign_message = False
-                    add_user_to_index(self.user)
-                    await self.write_message(f"HELLO {self.user.index} {self.user.address} {coaster_address}")
+                        self.user.address = admin_address
+                        self.user.index = int(user_address_to_index[self.user.address])
+                        self.user.is_verified = True
+                        guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
+                        if not bool_allow_guest_user and self.user.index < 0:
+                            await self.write_message("GUEST DISABLED")
+                            self.close()
+                            return
+                        self.user.waiting_for_clipboard_sign_message = False
+                        add_user_to_index(self.user)
+                        await self.write_message(f"HELLO {self.user.index} {self.user.address} {coaster_address}")
+
+                    elif split_lenght == 5:
+                        """
+                        CHECK IF THE COASTER USING AN ETHEREUM ADDRESS TO METAMASK IS VALIDE
+                        """
+
+
+                        print ("Try to log as coaster key")
+                        # 0:guid, 
+                        # 1:coaster_address,
+                        # 2:signature_by_coaster,
+                        # 3:admin_address, 
+                        # 4:signature_letter_maque
+                        coaster_address = split_message[1]
+                        signed_guid_by_coaster_address = split_message[2]
+                        admin_address = split_message[3]
+                        signature_letter_maque = split_message[4]
+                    
+                        if admin_address not in user_address_to_index:
+                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED: "+admin_address)
+                            await self.write_message(f"RTFM:{RTFM}")
+                            self.close()
+                            return
+
+                        if not is_message_signed_from_params(coaster_address, admin_address, signature_letter_maque):
+                            await self.write_message("LETTER MARQUE SIGNATURE INVALID")
+                            self.close()
+                            return
+                        
+                        if not is_message_signed_from_params(to_signed_guid, coaster_address, signed_guid_by_coaster_address):
+                            await self.write_message("GUID NOT SIGNED BY COASTER")
+                            self.close()
+                            return
+                        await self.write_message(f"COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
+
+
+                        self.user.address = admin_address
+                        self.user.index = int(user_address_to_index[self.user.address])
+                        self.user.is_verified = True
+                        guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
+                        if not bool_allow_guest_user and self.user.index < 0:
+                            await self.write_message("GUEST DISABLED")
+                            self.close()
+                            return
+                        self.user.waiting_for_clipboard_sign_message = False
+                        add_user_to_index(self.user)
+                        await self.write_message(f"HELLO {self.user.index} {self.user.address} {coaster_address}")
             else:
+                if self.user.exit_handler or self.user.websocket is None:
+                    print("Exit handler")
+                    remove_user_from_index(self.user)
+                    return
                 # print("Received message", message)
                 if isinstance(message, str):
                     await hangle_text_message(self.user, message)
@@ -382,8 +585,9 @@ async def handle_byte_message(user: UserHandshake, message: bytes):
             elif message_length == 8:
                 int_index, int_value = struct.unpack('<ii', message)
             print(f"Relay {user.index} {int_value} {current_time}")
+            
             await append_byte_to_queue(user,struct.pack('<iiQ', int(user.index), int_value, current_time))
-            print("A")
+            
 
         elif message_length == 12 or message_length == 16:
             ulong_date = 0
@@ -393,8 +597,13 @@ async def handle_byte_message(user: UserHandshake, message: bytes):
             elif message_length == 16:
                 int_index, int_value, ulong_date = struct.unpack('<iiQ', message)
             print(f"Relay {user.index} {int_value} {ulong_date}")
+            if bool_override_ntp_past_date:             
+                server_ntp_time = int(get_ntp_time_from_local())
+                if ulong_date <server_ntp_time:
+                    ulong_date = int(server_ntp_time)
+
             await append_byte_to_queue(user,struct.pack('<iiQ', user.index, int_value, ulong_date))
-            print("A")
+            
 
 def udp_async_server():
     import time
@@ -433,11 +642,19 @@ if __name__ == "__main__":
     server_thread.daemon = True 
     server_thread.start()
     
-    app = make_app()
-    app.listen(4615)  
-    print("Server started on ws://0.0.0.0:4615/")
-    tornado.ioloop.IOLoop.current().start()
- 
+
+    port_count = 4615
+    while True:
+        try:
+            app = make_app()
+            app.listen(port_count)  
+            print(f"Server started on ws://0.0.0.0:{port_count}/")
+            tornado.ioloop.IOLoop.current().start()
+        except Exception as e:
+            print (f"Server Port error: {e}")
+            traceback.print_exc()
+            port_count+=1
+        
     
     
 
