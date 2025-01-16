@@ -60,6 +60,16 @@ WantedBy=timers.target
 # sudo systemctl list-timers | grep apintio_push_iid
 
 
+"""
+sudo systemctl stop apintio_push_iid.service
+sudo systemctl stop apintio_push_iid.timer
+"""
+
+"""
+sudo systemctl restart apintio_push_iid.service
+sudo systemctl restart apintio_push_iid.timer
+"""
+
 
 
 
@@ -68,6 +78,7 @@ WantedBy=timers.target
 
 import json
 import socket
+import time
 import traceback
 from web3 import Web3
 import os
@@ -97,7 +108,7 @@ from VerifyBit4096B58Pkcss1SHA256 import is_verify_b58rsa4096_signature_no_lette
 bool_override_ntp_past_date=False
 
 w3 = Web3()
-ntp_server = "time.google.com"
+ntp_server = "be.pool.ntp.org"
 
 def get_ntp_time():
     import ntplib
@@ -105,11 +116,17 @@ def get_ntp_time():
     c = ntplib.NTPClient()
     response = c.request(ntp_server, version=3)
     return response.tx_time
+
+def get_local_timestamp_in_ms_utc_since1970():
+        return int(time.time()*1000)
+    
 def get_ntp_time_from_local():
     global millisecond_diff
     return asyncio.get_event_loop().time()*1000+millisecond_diff
+
+
 ntp_timestmap = get_ntp_time()*1000
-local_timestamp = asyncio.get_event_loop().time()*1000
+local_timestamp = get_local_timestamp_in_ms_utc_since1970()
 millisecond_diff = ntp_timestmap-local_timestamp
 print(f"ntp_timestmap: {ntp_timestmap}")
 print(f"local_timestamp: {local_timestamp}")
@@ -146,17 +163,36 @@ additionnal_in_code_add="""
 -56:0x0AD2FFA0A42d43B10f848ED07604a1737c1c07Cb
 -57:0xDa3239C8ad5C321A1411F3acC2C1f9F8C9D34ECE
 -85:0xDa3239C8ad5C321A1411F3acC2C1f9F8C9D34ECE
-"""
+  1:0xA7c02172ff523586907C201d76AB6EE4A370d0c2  
+  2:0x77C724490291F7D18b9B5320B75D9d2bE609faa5  
+  3:0x7E5F382863E003022757490328d03ebf33D7c2e0  
+  4:0x228Ec05056F54B5660aBFE61b3eda28b4D975048  
+  5:0xC1F1a74CD83d868F6E5E118b6889D5C311C9c6B4  
+  6:0x76B4EF4Ca8b2D33044B1A155319fd6B486d62143  
+  7:0x699E2d3aD536487238529e26FEb9683ccEA384B0  
+  8:0x301a8FEe63D7B2a8af2F2E378B7A366fd8e7953c  
+  9:0x8dc7aEA6fC8AAd7Db06e146Aed524db2CA30A5D4  
+ 10:0x82dC329171eCfBf253551D706227713CC6560AEF  
+ 11:0xc5E49050B1c9aAdb9e205ffc952Ea7A6DB701762  
+ 12:0xddf768166Cc1FfbdFCf42396fB8b215069d6FD7F  
+ 13:0xC1c76104106C4e68F8a40E748Ed3Eff22484bD3F  
+ 14:0x6CdD12C4CaaF4bcE5669f7f386d73a55ec7D1129  
+ 15:0xB2B8EEB186236BB7EdBd8ac6d46147F9dC03d42E  
+ 16:0xaF3fBC01B8f6bcBaFF5aa4C71529b79067B8f670
+""".replace(" ", "")
 
-coaster_ed25519_in_code_add="""
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIS2syCcYRDf+O0sn+goxBnb6tKjYPZo6F0q/95TcPrd|0xDa3239C8ad5C321A1411F3acC2C1f9F8C9D34ECE|0x6d873c994f8ea65bb12724a5cb36d766814332c40f6ae880c6c08d54790ae83f08fda250c8e4e1d31e0c4a29ac7d94aea25624fcbc6d845173ea5cbe3028de6d1c
-"""
 
 unity_rsa_4096_in_code_add="""
-
 -99:pBit4096B58Pkcs1SHA2568arQkFZ8ZJYKVVkCiefn9ckvmUDmF9Hy5YEoNn4FoJn61B7bP9fFwYxWMGQpZJAD2374pnfxqaj5aThoR2j5SJk8TpScHwGThbJkfwDogkVoW523YTxP69LiZkE92qcgsrcSYZfkoqFtyFXVVkN9m5o3SDNNy2pSN9eygZGvvGigJMkXGb8xREGAmvkPt8XV79UbxvoooN1HaTRJu6LwiTJ41zFrGfyZnxMVgeRsxa3brrTpYoxt2hvh1otJ3HxajWeFfvqysYadKzoC1u54C7AuZPCpSkUbzEgERDLC5f5fqJ8LTdcTsubrC5BFQZQK6YBGN3PycYEy
+"""
+
+# 7074ce50c023524f306f63ed875fb9d244b606a54e0fae5e2f1d4d3359f59649 Patato 
+# 6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124 Potato
+unsecure_SHA256_password_connection="""
+-123:6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124 
 
 """
+
 
 ## If false, the user with index < 0 will be rejected
 # -integer index are key given to allow guest to use the server
@@ -178,6 +214,7 @@ additionnal_rsa_b58key_in_code_add = """
 user_index_to_address={}
 user_address_to_index={}
 
+
 if os.path.exists(user_index_public_index_file):
     with open(user_index_public_index_file, 'r') as file:
         text = file.read()
@@ -185,8 +222,8 @@ if os.path.exists(user_index_public_index_file):
         for line in lines[:20]:
             if ":" in line:
                 index, address = line.split(":")
-                user_index_to_address[index] = address
-                user_address_to_index[address] = index
+                user_index_to_address[index] = address.strip()
+                user_address_to_index[address] = index.strip()
 
 
 print (f"Claimed index: {len(user_index_to_address)}")
@@ -198,15 +235,17 @@ print(f"Byte size of user_index_to_address: {dict_size}, {dico_size_in_mo} Mo")
 
 for line in additionnal_in_code_add.split("\n"):
     if len(line)>0:
+        line= line.strip("\r").strip("\n").strip()
         index, address = line.split(":")
-        user_index_to_address[index] = address
-        user_address_to_index[address] = index
+        user_index_to_address[index] = address.strip()
+        user_address_to_index[address] = index.strip()
         print(f"In code Add {index} {address}")
 
 
 if bool_allow_rsa_user:
     for line in unity_rsa_4096_in_code_add.split("\n"):
         if len(line)>0:
+            line= line.strip("\r").strip("\n").strip()
             index, address = line.split(":")
             user_index_to_address[index] = address.strip()
             user_address_to_index[address] = index.strip()
@@ -216,7 +255,29 @@ if bool_allow_rsa_user:
 
 
 
-    
+
+# IID is design to teach to student at the base of the design.
+# If the student don't have the level to learn or understand RSA.
+# Then link a integer index to password is a good way to start.
+# You should not store password in code. So we use SHA256
+# NOTE THAT YOU SHOULD NOT USE THIS IN PRODUCTION
+# ETH AND RSA SIGN IS THE ONLY WAY TO BE SURE OF THE IDENTITY
+# ANY SNIFFER CAN USE THE SHA256 PASSWORD TO CONNECT
+
+sha256_to_index = {}
+index_to_sha256_password = {}
+bool_allow_sha256_password_connection = True
+if bool_allow_sha256_password_connection:
+    for line in unsecure_SHA256_password_connection.split("\n"):
+        if len(line)>0:
+            line= line.strip("\r").strip("\n").strip()
+            index, password = line.split(":")
+            index = index.strip().upper()
+            password= password.strip().upper()
+            index_to_sha256_password[index] = password.strip()
+            sha256_to_index[password] = index.strip()
+            print(f"In code Add SHA {index} {password[:8]}")
+            
 
 
 def is_message_signed(given_message):
@@ -393,6 +454,30 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                 if not isinstance(message, str):
                     print ("R", message)
                     return
+                
+                # SHA256:7074ce50c023524f306f63ed875fb9d244b606a54e0fae5e2f1d4d3359f59649
+                if len(message)>7 and message.upper().strip().startswith("SHA256:"):
+                    hash = message[7:].strip().upper()
+                    print(sha256_to_index)
+                    if hash in sha256_to_index:
+                        index = sha256_to_index[hash]
+                        self.user.index = int(index)
+                        self.user.is_verified = True
+                        guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
+                        if not bool_allow_guest_user and self.user.index < 0:
+                            await self.write_message("GUEST DISABLED")
+                            self.close()
+                            return
+                        self.user.waiting_for_clipboard_sign_message = False
+                        self.user.address = hash
+                        add_user_to_index(self.user)
+                        string_callback = f"HELLO {index} {hash[:8]}..."
+                        print(string_callback)
+                        await self.write_message(string_callback)
+                    else:
+                        await self.write_message("INVALID SHA256:{hash}")
+                        self.close()
+                
                 split_message = message.split("|")
                 split_lenght = len(split_message)
                 for i in range(split_lenght):
@@ -406,6 +491,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                 
                         return
 
+               
+
                 if split_lenght == 3:
                     address = split_message[1].strip()
                     if is_verify_b58rsa4096_signature_no_letter_marque(to_signed_guid, message) and bool_allow_rsa_user:
@@ -417,7 +504,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         print(f"User {address} signed the handshake")
                         self.user.address = address
                         if address not in user_address_to_index:
-                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED")
+                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED (3)")
                             await self.write_message(f"RTFM:{RTFM}")
                             self.close()
                             return
@@ -448,7 +535,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         print(f"User {address} signed the handshake")
                         self.user.address = address
                         if address not in user_address_to_index:
-                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED")
+                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED (1)")
                             await self.write_message(f"RTFM:{RTFM}")
                             self.close()
                             return
@@ -475,12 +562,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         # 2:signature_by_coaster,
                         # 3:admin_address, 
                         # 4:signature_letter_maque
-                        coaster_address = split_message[1]
-                        admin_address = split_message[3]
-                        signature_letter_maque = split_message[4]
+                        coaster_address = split_message[1].strip()
+                        admin_address = split_message[3].strip()
+                        signature_letter_maque = split_message[4].strip()
                     
                         if admin_address not in user_address_to_index:
-                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED: "+admin_address)
+                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED(5)): "+admin_address)
                             await self.write_message(f"RTFM:{RTFM}")
                             self.close()
                             return
@@ -512,13 +599,13 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         # 2:signature_by_coaster,
                         # 3:admin_address, 
                         # 4:signature_letter_maque
-                        coaster_address = split_message[1]
-                        signed_guid_by_coaster_address = split_message[2]
-                        admin_address = split_message[3]
-                        signature_letter_maque = split_message[4]
+                        coaster_address = split_message[1].strip()
+                        signed_guid_by_coaster_address = split_message[2].strip()
+                        admin_address = split_message[3].strip()
+                        signature_letter_maque = split_message[4].strip()
                     
                         if admin_address not in user_address_to_index:
-                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED: "+admin_address)
+                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED(6): "+admin_address)
                             await self.write_message(f"RTFM:{RTFM}")
                             self.close()
                             return
