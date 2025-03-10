@@ -110,6 +110,7 @@ bool_override_ntp_past_date=False
 
 w3 = Web3()
 ntp_server = "be.pool.ntp.org"
+ntp_server = "be.pool.ntp.org"
 
 def get_ntp_time():
     import ntplib
@@ -155,6 +156,10 @@ bool_use_as_listener_to=True
 RTFM= "https://github.com/EloiStree/2025_01_01_MegaMaskSignInHandshake_Python.git"
 
 print("Hello World Python IID Listen Server")
+
+
+
+
 user_index_public_index_file = "/git/APIntIO_Claim/Claims"
 
 
