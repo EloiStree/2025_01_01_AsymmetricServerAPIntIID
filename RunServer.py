@@ -10,6 +10,7 @@
 # 
 # pip install web3 eth-account websockets requests tornado --break-system-packages 
 # pip install ntplib --break-system-packages
+# git clone https://github.com/EloiStree/2025_01_01_HelloMegaMaskPushToIID.git /git/push_iid
 
 
 
