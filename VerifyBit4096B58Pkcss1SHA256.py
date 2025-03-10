@@ -207,6 +207,13 @@ def is_verify_b58rsa4096_signature(guid_sent, received_guid_handshake):
     # """.strip()
     # received_guid_handshake = """
 
+# MESSAGETOSIGNE
+# PUBLICADDRESS
+# SIGNATURE
+# MASTERADDRESS
+# MASTERSIGNATURE
+
+
     # 68e5616a-6066-4acc-b349-b7b2a6d3eff8|
     # pBit4096B58Pkcs1SHA2568arQkFZ8ZJYKVVkCiefn9ckvmUDmF9Hy5YEoNn4FoJn61B7bP9fFwYxWMGQpZJAD2374pnfxqaj5aThoR2j5SJk8TpScHwGThbJkfwDogkVoW523YTxP69LiZkE92qcgsrcSYZfkoqFtyFXVVkN9m5o3SDNNy2pSN9eygZGvvGigJMkXGb8xREGAmvkPt8XV79UbxvoooN1HaTRJu6LwiTJ41zFrGfyZnxMVgeRsxa3brrTpYoxt2hvh1otJ3HxajWeFfvqysYadKzoC1u54C7AuZPCpSkUbzEgERDLC5f5fqJ8LTdcTsubrC5BFQZQK6YBGN3PycYEy|
     # FocHa7Q8kknGi4XZt4snBQ3zfXxJ4ZQE7vipVYbFmMF9iTwmrob1UHZbcPx2qDSH3zj9WDEjBbSn8wkBAdPtCsgA3SL7ZEVFNRJrdF4K2cq1izTEESNnaP9AkghjhtATXq6kDc5qmiqrcggM72MRzwzbekgVYXDbifv7VTzkcGWuvQT|

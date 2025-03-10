@@ -189,7 +189,8 @@ unity_rsa_4096_in_code_add="""
 # 7074ce50c023524f306f63ed875fb9d244b606a54e0fae5e2f1d4d3359f59649 Patato 
 # 6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124 Potato
 unsecure_SHA256_password_connection="""
--123:6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124 
+-123:6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124
+-124:872e4e50ce9990d8b041330c47c9ddd11bec6b503ae9386a99da8584e9bb12c4 
 
 """
 
@@ -197,14 +198,12 @@ unsecure_SHA256_password_connection="""
 ## If false, the user with index < 0 will be rejected
 # -integer index are key given to allow guest to use the server
 bool_allow_guest_user = True
-
+bool_allow_unregistered_user = True
 
 ## All my tools and code are around Integer Index and Ethereum Address Sign and Verify.
 # RSA is still in the project because ECC is not natively in Unity3D.
 # You can allows RSA user when you want to reduce friction but you should prefer ECC with MetaMask.
 bool_allow_rsa_user = True
-
-
 additionnal_rsa_b58key_in_code_add = """
 
 
