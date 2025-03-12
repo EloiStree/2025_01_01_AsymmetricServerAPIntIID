@@ -185,19 +185,21 @@ additionnal_in_code_add="""
  14:0x6CdD12C4CaaF4bcE5669f7f386d73a55ec7D1129  
  15:0xB2B8EEB186236BB7EdBd8ac6d46147F9dC03d42E  
  16:0xaF3fBC01B8f6bcBaFF5aa4C71529b79067B8f670
+ 17:0x8Fd7205237FdF4158b114a95A776ED2153CB36A3
 """.replace(" ", "")
 
 
-unity_rsa_4096_in_code_add="""
--99:pBit4096B58Pkcs1SHA2568arQkFZ8ZJYKVVkCiefn9ckvmUDmF9Hy5YEoNn4FoJn61B7bP9fFwYxWMGQpZJAD2374pnfxqaj5aThoR2j5SJk8TpScHwGThbJkfwDogkVoW523YTxP69LiZkE92qcgsrcSYZfkoqFtyFXVVkN9m5o3SDNNy2pSN9eygZGvvGigJMkXGb8xREGAmvkPt8XV79UbxvoooN1HaTRJu6LwiTJ41zFrGfyZnxMVgeRsxa3brrTpYoxt2hvh1otJ3HxajWeFfvqysYadKzoC1u54C7AuZPCpSkUbzEgERDLC5f5fqJ8LTdcTsubrC5BFQZQK6YBGN3PycYEy
-"""
+
 
 # 7074ce50c023524f306f63ed875fb9d244b606a54e0fae5e2f1d4d3359f59649 Patato 
 # 6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124 Potato
+# e33ae5c1f7eb2ef969157514e1c4f6c5ae81600b5b890da00037bce1d5d3a43a VanLobby
+# 872e4e50ce9990d8b041330c47c9ddd11bec6b503ae9386a99da8584e9bb12c4 HelloWorld
 unsecure_SHA256_password_connection="""
 -123:6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124
 -124:872e4e50ce9990d8b041330c47c9ddd11bec6b503ae9386a99da8584e9bb12c4 
-
+-125:e33ae5c1f7eb2ef969157514e1c4f6c5ae81600b5b890da00037bce1d5d3a43a
+-221:872e4e50ce9990d8b041330c47c9ddd11bec6b503ae9386a99da8584e9bb12c4
 """
 
 
@@ -210,8 +212,9 @@ bool_allow_unregistered_user = True
 # RSA is still in the project because ECC is not natively in Unity3D.
 # You can allows RSA user when you want to reduce friction but you should prefer ECC with MetaMask.
 bool_allow_rsa_user = True
-additionnal_rsa_b58key_in_code_add = """
-
+unity_rsa_4096_in_code_add="""
+-98:pBit4096B58Pkcs1SHA2568arQkFZ8ZJYKVVkCiefn9ckvmUDmF9Qh2QwrDrX63KXs1eUmvAgai9phsXRUzanKkD5qQz8rwc2MQgZh91BTmzSmfdTS3uBxWHTkUkUVvfHWwBVnHUaocqwHW8RJgit845Qus5AWUJn9GRECfapNWp5AGz62iWoimGbWQx45vZkgtswRYuQSXGjh2tL1dLEjUPCNoCPdkY2Q5tJh3m7DyCB1MdFVdtXwRVbKwxkudaVwcuzDimJJgWzzhADT8V9L6Z1M6A1sxtcokk3jpdfKHYaoeYKGQL6sHnHrTDz2XWVPnsLK7PickurddzjC2kL2TBpCkdcdY9fB
+-99:pBit4096B58Pkcs1SHA2568arQkFZ8ZJYKVVkCiefn9ckvmUDmF9Hy5YEoNn4FoJn61B7bP9fFwYxWMGQpZJAD2374pnfxqaj5aThoR2j5SJk8TpScHwGThbJkfwDogkVoW523YTxP69LiZkE92qcgsrcSYZfkoqFtyFXVVkN9m5o3SDNNy2pSN9eygZGvvGigJMkXGb8xREGAmvkPt8XV79UbxvoooN1HaTRJu6LwiTJ41zFrGfyZnxMVgeRsxa3brrTpYoxt2hvh1otJ3HxajWeFfvqysYadKzoC1u54C7AuZPCpSkUbzEgERDLC5f5fqJ8LTdcTsubrC5BFQZQK6YBGN3PycYEy
 
 """
 
@@ -506,7 +509,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         THE RSA ADDRESS IS VALIDE AND DONT USER LETTER MARQUE
                         THE SERVER IS SET TO ALLOW RSA ONLY USER
                         """
-                        print(f"User {address} signed the handshake")
+                        print(f"User ||{address}|| signed the handshake")
                         self.user.address = address
                         if address not in user_address_to_index:
                             await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED (3)")
