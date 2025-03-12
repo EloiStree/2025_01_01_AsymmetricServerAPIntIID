@@ -44,6 +44,9 @@ You can edit the file and replace `ntp_server`
 ```
 nano /git/push_iid/RunServer.py
 ```
+
+Replace by what you need:
+```
 ntp_server="be.pool.ntp.org" # If you want to have the Belgium time
 ntp_server="127.0.0.1" # If you want the NTP Server on the PI that you installed
 ```
