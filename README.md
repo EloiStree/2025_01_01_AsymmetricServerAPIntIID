@@ -40,6 +40,8 @@ BonjourIID cdc166e605ed058f1cd21fc61aa8b098827cef38297ad4c042a224719a217294
 SHA256:cdc166e605ed058f1cd21fc61aa8b098827cef38297ad4c042a224719a217294  
 
 
+https://learnmeabitcoin.com/technical/keys/base58/
+
 
 ```
 # https://github.com/EloiStree/2025_01_01_MegaMaskSignInHandshake_Python
