@@ -8,8 +8,8 @@
 # import iidwshandshake 
 
 # 
-# pip install web3 eth-account websockets requests tornado --break-system-packages 
-# pip install ntplib --break-system-packages
+# pip install web3 eth-account base58 websockets requests tornado ntplib --break-system-packages 
+
 # git clone https://github.com/EloiStree/2025_01_01_HelloMegaMaskPushToIID.git /git/push_iid
 
 
@@ -110,7 +110,7 @@ bool_override_ntp_past_date=False
 
 w3 = Web3()
 ntp_server = "be.pool.ntp.org"
-ntp_server = "be.pool.ntp.org"
+ntp_server = "127.0.0.1"
 
 def get_ntp_time():
     import ntplib
