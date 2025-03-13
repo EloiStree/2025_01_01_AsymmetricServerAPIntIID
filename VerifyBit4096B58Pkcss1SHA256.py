@@ -24,6 +24,7 @@ from cryptography.hazmat.primitives import serialization
 from xml.etree import ElementTree
 w3 = Web3()
 
+import hashlib
 
 class pBit4096B58Pkcs1SHA256:
     start_public_key_b58 = "pBit4096B58Pkcs1SHA256"
@@ -38,7 +39,15 @@ class pBit4096B58Pkcs1SHA256:
         pass
 
 
+    def get_password_sha256_hash(password):
+        """
+        Check if a password is the same as the stored hash
+        """
+        sha256_hash = hashlib.sha256()
+        sha256_hash.update(password.encode())
+        hash_recovered = sha256_hash.hexdigest()
         
+        return hash_recovered
 
     def is_signed_clipboard_ethereum_text(given_message):
         """
