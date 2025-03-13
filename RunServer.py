@@ -1,80 +1,11 @@
 # WARNING: IN THIS CODE I CONSIDER THAT YOU HAVE A SMALL COMMUNITY OF USERS
 # THIS IS NOT DESIGN FOR A BIG COMMUNITY, ELSE YOU WILL NEED RUST CODE AND  FOLK
 
-
-
-
 # https://github.com/EloiStree/2025_01_01_MegaMaskSignInHandshake_Python
 # import iidwshandshake 
 
-# 
 # pip install web3 eth-account base58 websockets requests tornado ntplib --break-system-packages 
-
 # git clone https://github.com/EloiStree/2025_01_01_HelloMegaMaskPushToIID.git /git/push_iid
-
-
-
-
-# Debian: /lib/systemd/system/apintio_push_iid.service
-# sudo nano /lib/systemd/system/apintio_push_iid.service
-"""
-[Unit]
-Description=APIntIO Push IID Service
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/usr/bin/python3 /git/push_iid/RunServer.py
-Restart=always
-User=root
-WorkingDirectory=/git/push_iid
-
-[Install]
-WantedBy=multi-user.target
-"""
-#1h
-# sudo nano /etc/systemd/system/apintio_push_iid.timer
-"""
-[Unit]
-Description=APIntIO Push IID Timer
-
-[Timer]
-OnBootSec=0min
-OnUnitActiveSec=10s
-
-[Install]
-WantedBy=timers.target
-"""
-
-# cd /lib/systemd/system/
-# sudo systemctl daemon-reload
-# sudo systemctl enable apintio_push_iid.service
-# chmod +x /git/push_iid/RunServer.py
-# sudo systemctl enable apintio_push_iid.service
-# sudo systemctl start apintio_push_iid.service
-# sudo systemctl status apintio_push_iid.service
-# sudo systemctl stop apintio_push_iid.service
-# sudo systemctl restart apintio_push_iid.service
-# sudo systemctl enable apintio_push_iid.timer
-# sudo systemctl start apintio_push_iid.timer
-# sudo systemctl status apintio_push_iid.timer
-# sudo systemctl list-timers | grep apintio_push_iid
-
-
-"""
-sudo systemctl stop apintio_push_iid.service
-sudo systemctl stop apintio_push_iid.timer
-"""
-
-"""
-sudo systemctl restart apintio_push_iid.service
-sudo systemctl restart apintio_push_iid.timer
-"""
-
-
-
-
-
 
 
 import json
@@ -101,7 +32,16 @@ import tornado.websocket
 
 from VerifyBit4096B58Pkcss1SHA256 import is_verify_b58rsa4096_signature
 from VerifyBit4096B58Pkcss1SHA256 import is_verify_b58rsa4096_signature_no_letter_marque
+from typing import Dict
 
+
+stop_service_script ="""
+sudo systemctl stop apintio_push_iid.service
+sudo systemctl stop apintio_push_iid.timer
+"""
+
+# run code to stop current service
+os.system(stop_service_script)
 
 
 # When you do some game you can trust user.
@@ -157,18 +97,63 @@ RTFM= "https://github.com/EloiStree/2025_01_01_MegaMaskSignInHandshake_Python.gi
 
 print("Hello World Python IID Listen Server")
 
+relative_file_path_auth_eth = "Auth/ETH.txt"
+relative_file_path_auth_sha256 = "Auth/SHA256.txt"
+relative_file_path_auth_pBit4096B58Pkcs1SHA256 = "Auth/pBit4096B58Pkcs1SHA256.txt"
+file_path_auth_git_eth_claimed_integer = "/git/apint_claims/whitelist_eth.txt"
+file_path_auth_git_coaster_eth_claimed_integer = "/git/apint_claims/whitelist_coaster_eth.txt"
+file_path_auth_git_coaster_rsa_claimed_integer = "/git/apint_claims/whitelist_coaster_rsa.txt"
 
 
 
-user_index_public_index_file = "/git/APIntIO_Claim/Claims"
+def import_file_as_text(file_path, default_text):
+    if not os.path.exists(file_path):
+        
+        ## create the folder
+        folder = os.path.dirname(file_path)
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        
+        with open(file_path, 'w') as file:
+            file.write(default_text)
+    
+    with open(file_path, 'r') as file:
+        text = file.read()
+        
+    while " " in text:
+        text = text.replace(" ", "")
+    return text
+    
+def load_file_line_to_index_array(text, user_count_label=""):
+    index_to_address_ref: Dict[str, str]={"":""}
+    address_to_index_ref: Dict[str, str]={"":""}
+    lines = text.split("\n")
+    for line in lines:
+        if ":" in line:
+            index, address = line.split(":")
+            index_to_address_ref[str(index)] = str(address.strip())
+            address_to_index_ref[str(address)] = str(index.strip())
+            
+    print (f"Claimed {user_count_label} count: {len(index_to_address_ref)}")
+    return index_to_address_ref, address_to_index_ref
+
+def load_file_line_to_coaster_array(text):
+    
+    while " " in text:
+        text = text.replace(" ", "")
+    
+    index_to_coaster_ref={}
+    lines = text.split("\n")
+    for line in lines:
+        if ">" in line:
+            address, coaster = line.split(">")
+            index_to_coaster_ref[str(address.strip())] = str(coaster.strip())
+    return index_to_coaster_ref
 
 
 # If you are like 1-30 address, in code add could be usefull
 # But you should prefer a file system if possible.
-additionnal_in_code_add="""
--56:0x0AD2FFA0A42d43B10f848ED07604a1737c1c07Cb
--57:0xDa3239C8ad5C321A1411F3acC2C1f9F8C9D34ECE
--85:0xDa3239C8ad5C321A1411F3acC2C1f9F8C9D34ECE
+in_code_add_index_to_eth="""
   1:0xA7c02172ff523586907C201d76AB6EE4A370d0c2  
   2:0x77C724490291F7D18b9B5320B75D9d2bE609faa5  
   3:0x7E5F382863E003022757490328d03ebf33D7c2e0  
@@ -185,107 +170,81 @@ additionnal_in_code_add="""
  14:0x6CdD12C4CaaF4bcE5669f7f386d73a55ec7D1129  
  15:0xB2B8EEB186236BB7EdBd8ac6d46147F9dC03d42E  
  16:0xaF3fBC01B8f6bcBaFF5aa4C71529b79067B8f670
+ 17:0x8Fd7205237FdF4158b114a95A776ED2153CB36A3
 """.replace(" ", "")
 
-
-unity_rsa_4096_in_code_add="""
--99:pBit4096B58Pkcs1SHA2568arQkFZ8ZJYKVVkCiefn9ckvmUDmF9Hy5YEoNn4FoJn61B7bP9fFwYxWMGQpZJAD2374pnfxqaj5aThoR2j5SJk8TpScHwGThbJkfwDogkVoW523YTxP69LiZkE92qcgsrcSYZfkoqFtyFXVVkN9m5o3SDNNy2pSN9eygZGvvGigJMkXGb8xREGAmvkPt8XV79UbxvoooN1HaTRJu6LwiTJ41zFrGfyZnxMVgeRsxa3brrTpYoxt2hvh1otJ3HxajWeFfvqysYadKzoC1u54C7AuZPCpSkUbzEgERDLC5f5fqJ8LTdcTsubrC5BFQZQK6YBGN3PycYEy
+in_code_add_index_to_rsa4096="""
+-99:pBit4096B58Pkcs1SHA2568arQkFZ8ZJYKVVkCiefn9ckvmUDmF9Qh2QwrDrX63KXs1eUmvAgai9phsXRUzanKkD5qQz8rwc2MQgZh91BTmzSmfdTS3uBxWHTkUkUVvfHWwBVnHUaocqwHW8RJgit845Qus5AWUJn9GRECfapNWp5AGz62iWoimGbWQx45vZkgtswRYuQSXGjh2tL1dLEjUPCNoCPdkY2Q5tJh3m7DyCB1MdFVdtXwRVbKwxkudaVwcuzDimJJgWzzhADT8V9L6Z1M6A1sxtcokk3jpdfKHYaoeYKGQL6sHnHrTDz2XWVPnsLK7PickurddzjC2kL2TBpCkdcdY9fB
 """
 
 # 7074ce50c023524f306f63ed875fb9d244b606a54e0fae5e2f1d4d3359f59649 Patato 
 # 6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124 Potato
-unsecure_SHA256_password_connection="""
+in_code_add_index_to_sha256="""
 -123:6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124
 -124:872e4e50ce9990d8b041330c47c9ddd11bec6b503ae9386a99da8584e9bb12c4 
-
 """
+
+
+text_index_to_eth = import_file_as_text(relative_file_path_auth_eth, in_code_add_index_to_eth)
+text_index_to_rsa4096 = import_file_as_text(relative_file_path_auth_pBit4096B58Pkcs1SHA256, in_code_add_index_to_rsa4096)
+text_index_to_sha256 = import_file_as_text(relative_file_path_auth_sha256, in_code_add_index_to_sha256)
+
+text_index_to_eth_claim = import_file_as_text(file_path_auth_git_eth_claimed_integer, "# ADD IN THIS FILE THE ETHEREUM ADDRESS CLAIMED THAT YOUR AUTHORIZED")
+text_index_to_coaster_eth_claim = import_file_as_text(file_path_auth_git_coaster_eth_claimed_integer, "# ADD ETHEREUM WALLET THAT ARE ACTING AS COASTER AND THE MASTER WALLET")
+text_index_to_coaster_rsa_claim = import_file_as_text(file_path_auth_git_coaster_rsa_claimed_integer, "# ADD RSA PUBLIC IN pBit4096B58Pkcs1SHA256 KEY THAT ARE ACTING AS COASTER AND THE MASTER WALLET")
+
+
+
+
+
 
 
 ## If false, the user with index < 0 will be rejected
 # -integer index are key given to allow guest to use the server
 bool_allow_guest_user = True
+
+# Do you want to trust anyone with a signed message ?
 bool_allow_unregistered_user = True
 
-## All my tools and code are around Integer Index and Ethereum Address Sign and Verify.
-# RSA is still in the project because ECC is not natively in Unity3D.
-# You can allows RSA user when you want to reduce friction but you should prefer ECC with MetaMask.
+# Do you want to use RSA user without ethereum address ?
 bool_allow_rsa_user = True
-additionnal_rsa_b58key_in_code_add = """
 
-
-"""
-
-# read the file
-user_index_to_address={}
-user_address_to_index={}
-
-
-if os.path.exists(user_index_public_index_file):
-    with open(user_index_public_index_file, 'r') as file:
-        text = file.read()
-        lines = text.split("\n")
-        for line in lines[:20]:
-            if ":" in line:
-                index, address = line.split(":")
-                user_index_to_address[index] = address.strip()
-                user_address_to_index[address] = index.strip()
-
-
-print (f"Claimed index: {len(user_index_to_address)}")
-dict_size = sys.getsizeof(user_index_to_address)
-for key, value in user_index_to_address.items():
-    dict_size += sys.getsizeof(key) + sys.getsizeof(value)
-dico_size_in_mo = int(int(dict_size) / 1024 / 1024*10000) / 10000
-print(f"Byte size of user_index_to_address: {dict_size}, {dico_size_in_mo} Mo")
-
-for line in additionnal_in_code_add.split("\n"):
-    if len(line)>0:
-        line= line.strip("\r").strip("\n").strip()
-        index, address = line.split(":")
-        user_index_to_address[index] = address.strip()
-        user_address_to_index[address] = index.strip()
-        print(f"In code Add {index} {address}")
-
-
-if bool_allow_rsa_user:
-    for line in unity_rsa_4096_in_code_add.split("\n"):
-        if len(line)>0:
-            line= line.strip("\r").strip("\n").strip()
-            index, address = line.split(":")
-            user_index_to_address[index] = address.strip()
-            user_address_to_index[address] = index.strip()
-            print(f"In code Add {index} {address}")
-
-# def is_message_signed_rsa(message, address, signature):
-
-
-
-
-# IID is design to teach to student at the base of the design.
-# If the student don't have the level to learn or understand RSA.
-# Then link a integer index to password is a good way to start.
-# You should not store password in code. So we use SHA256
-# NOTE THAT YOU SHOULD NOT USE THIS IN PRODUCTION
-# ETH AND RSA SIGN IS THE ONLY WAY TO BE SURE OF THE IDENTITY
-# ANY SNIFFER CAN USE THE SHA256 PASSWORD TO CONNECT
-
-sha256_to_index = {}
-index_to_sha256_password = {}
+# Do you want to use SHA256 password to connect to the server ?
 bool_allow_sha256_password_connection = True
+
+
+# Array of allowed etherum address users allowed to connect
+user_index_to_address,user_address_to_index  = load_file_line_to_index_array(text_index_to_eth, "Etherum Address")
+
+# Array of allowed RSA4096 users allowed to connect
+if bool_allow_rsa_user:
+    user_index_to_rsa , user_rsa_to_index  = load_file_line_to_index_array(text_index_to_rsa4096, "RSA Public Key")
+    
+# Array of allowed SHA256 password users allowed to connect
 if bool_allow_sha256_password_connection:
-    for line in unsecure_SHA256_password_connection.split("\n"):
-        if len(line)>0:
-            line= line.strip("\r").strip("\n").strip()
-            index, password = line.split(":")
-            index = index.strip().upper()
-            password= password.strip().upper()
-            index_to_sha256_password[index] = password.strip()
-            sha256_to_index[password] = index.strip()
-            print(f"In code Add SHA {index} {password[:8]}")
-            
+    user_index_to_sha256 , user_sha256_to_index  = load_file_line_to_index_array(text_index_to_sha256,"SHA256 Password")
 
 
-def is_message_signed(given_message):
+git_index_to_eth_claimed_integer, git_eth_claimed_integer_to_index = load_file_line_to_index_array(text_index_to_eth_claim, "Etherum Address Claimed")
+for index, value in git_index_to_eth_claimed_integer.items():
+        user_index_to_address[str(index)] = str(value)
+        user_address_to_index[str(value)] = str(index)
+                
+# ADDRESS >COASTER\n
+git_index_to_coaster_eth = load_file_line_to_coaster_array(text_index_to_coaster_eth_claim)
+git_index_to_coaster_rsa = load_file_line_to_coaster_array(text_index_to_coaster_rsa_claim)
+
+print (f"Claimed Coaster Eth count: {len(git_index_to_coaster_eth)}")
+print (f"Claimed Coaster RSA count: {len(git_index_to_coaster_rsa)}")
+
+
+
+
+
+def is_message_signed_ethereum(given_message):
+    """
+    return True if the message is signed with ethereum
+    """
     
     split_message = given_message.split("|")
     if len(split_message) < 3:
@@ -293,9 +252,9 @@ def is_message_signed(given_message):
     message = split_message[0]
     address = split_message[1]
     signature = split_message[2]
-    return is_message_signed_from_params(message, address, signature )
+    return is_message_signed_ethereum_from_params(message, address, signature )
 
-def is_message_signed_from_params(message, address, signature):
+def is_message_signed_ethereum_from_params(message, address, signature):
     # Message to verify
 
     # Encode the message
@@ -380,11 +339,12 @@ def flush_push_udp_queue():
         print ("Flush one:", bytes)
         relay_iid_message_as_local_udp_thread(bytes)
 
-async def push_byte_or_close( user: UserHandshake,  bytes: bytes):
+async def push_byte_or_close( user: UserHandshake,  b: bytes):
     if user.websocket is None:
         return
+    print(f"what {len(b)} ?{b}")
     try:
-        await user.websocket.write_message(bytes, binary=True)
+        await user.websocket.write_message(b, binary=True)
     except tornado.websocket.WebSocketClosedError:
         print(f"WebSocketClosedError: Connection closed for user {user.index}")
         user.websocket.close()
@@ -403,6 +363,8 @@ async def append_byte_to_queue(user: UserHandshake,  byte_to_push:bytes):
         print(f"Push to index {index}")
         if index in index_handshake_to_valide_user_list:
             for user_in_list in index_handshake_to_valide_user_list[index]:
+                
+                print (user_in_list)
                 if not bool_push_back_to_sender_bytes and user_in_list is user:
                     continue
                 if user_in_list.websocket is not None and not user_in_list.websocket.close_code:
@@ -453,6 +415,10 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         async def on_message(self, message):
             global user_address_to_index
             global user_index_to_address
+            global user_index_to_rsa
+            global user_rsa_to_index
+            global user_index_to_sha256
+            global user_sha256_to_index
 
             print("T ", message)
             if self.user.waiting_for_clipboard_sign_message:
@@ -462,10 +428,10 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                 
                 # SHA256:7074ce50c023524f306f63ed875fb9d244b606a54e0fae5e2f1d4d3359f59649
                 if len(message)>7 and message.upper().strip().startswith("SHA256:"):
-                    hash = message[7:].strip().upper()
-                    print(sha256_to_index)
-                    if hash in sha256_to_index:
-                        index = sha256_to_index[hash]
+                    hash_recovered = str(message[7:].strip())
+                    bool_is_in = user_sha256_to_index.get(hash_recovered) is not None
+                    if bool_is_in:
+                        index = user_sha256_to_index[hash_recovered]
                         self.user.index = int(index)
                         self.user.is_verified = True
                         guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
@@ -473,10 +439,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                             await self.write_message("GUEST DISABLED")
                             self.close()
                             return
+                        
                         self.user.waiting_for_clipboard_sign_message = False
-                        self.user.address = hash
+                        self.user.address = hash_recovered
                         add_user_to_index(self.user)
-                        string_callback = f"HELLO {index} {hash[:8]}..."
+                        string_callback = f"HELLO {index} {hash_recovered[:8]}..."
                         print(string_callback)
                         await self.write_message(string_callback)
                     else:
@@ -508,13 +475,13 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         """
                         print(f"User {address} signed the handshake")
                         self.user.address = address
-                        if address not in user_address_to_index:
+                        if address not in user_rsa_to_index:
                             await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED (3)")
                             await self.write_message(f"RTFM:{RTFM}")
                             self.close()
                             return
 
-                        self.user.index = int(user_address_to_index[address])
+                        self.user.index = int(user_rsa_to_index[address])
                         self.user.is_verified = True
                         guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
                         if not bool_allow_guest_user and self.user.index < 0:
@@ -532,7 +499,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
                         print ("Try to log as admin")
                         print(f"Sign in message received: {message}")
-                        if not is_message_signed(message):
+                        if not is_message_signed_ethereum(message):
                             await self.write_message("FAIL TO SIGN")
                             self.close()
                             return
@@ -615,12 +582,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                             self.close()
                             return
 
-                        if not is_message_signed_from_params(coaster_address, admin_address, signature_letter_maque):
+                        if not is_message_signed_ethereum_from_params(coaster_address, admin_address, signature_letter_maque):
                             await self.write_message("LETTER MARQUE SIGNATURE INVALID")
                             self.close()
                             return
                         
-                        if not is_message_signed_from_params(to_signed_guid, coaster_address, signed_guid_by_coaster_address):
+                        if not is_message_signed_ethereum_from_params(to_signed_guid, coaster_address, signed_guid_by_coaster_address):
                             await self.write_message("GUID NOT SIGNED BY COASTER")
                             self.close()
                             return
