@@ -1,3 +1,9 @@
+Unity3D Client: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth  
+Rasbperry Pi Pico Client: To add Later.  
+Python Client: To add later.  
+
+-------------------------------
+
 # 2025_01_01_HelloMegaMaskPushToIID
 
 See: https://github.com/EloiStree/2025_01_01_HelloMegaMaskListenToIID.git
