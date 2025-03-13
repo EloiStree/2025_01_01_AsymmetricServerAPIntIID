@@ -12,14 +12,9 @@ import json
 import socket
 import time
 import traceback
-from web3 import Web3
-import os
-from eth_account.messages import encode_defunct
 import uuid
 import os
-import sys
 import asyncio
-import websockets
 import struct
 import requests
 import queue
@@ -30,8 +25,7 @@ import tornado.web
 import tornado.websocket
 
 
-from VerifyBit4096B58Pkcss1SHA256 import is_verify_b58rsa4096_signature
-from VerifyBit4096B58Pkcss1SHA256 import is_verify_b58rsa4096_signature_no_letter_marque
+from VerifyBit4096B58Pkcss1SHA256 import pBit4096B58Pkcs1SHA256
 from typing import Dict
 
 
@@ -48,7 +42,8 @@ os.system(stop_service_script)
 # This option override the NTP date with the server date if in the past.
 bool_override_ntp_past_date=False
 
-w3 = Web3()
+
+
 ntp_server = "be.pool.ntp.org"
 ntp_server = "127.0.0.1"
 
@@ -180,6 +175,7 @@ in_code_add_index_to_rsa4096="""
 # 7074ce50c023524f306f63ed875fb9d244b606a54e0fae5e2f1d4d3359f59649 Patato 
 # 6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124 Potato
 in_code_add_index_to_sha256="""
+# Generate Password: https://emn178.github.io/online-tools/sha256.html
 -123:6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124
 -124:872e4e50ce9990d8b041330c47c9ddd11bec6b503ae9386a99da8584e9bb12c4 
 """
@@ -189,9 +185,20 @@ text_index_to_eth = import_file_as_text(relative_file_path_auth_eth, in_code_add
 text_index_to_rsa4096 = import_file_as_text(relative_file_path_auth_pBit4096B58Pkcs1SHA256, in_code_add_index_to_rsa4096)
 text_index_to_sha256 = import_file_as_text(relative_file_path_auth_sha256, in_code_add_index_to_sha256)
 
-text_index_to_eth_claim = import_file_as_text(file_path_auth_git_eth_claimed_integer, "# ADD IN THIS FILE THE ETHEREUM ADDRESS CLAIMED THAT YOUR AUTHORIZED")
-text_index_to_coaster_eth_claim = import_file_as_text(file_path_auth_git_coaster_eth_claimed_integer, "# ADD ETHEREUM WALLET THAT ARE ACTING AS COASTER AND THE MASTER WALLET")
-text_index_to_coaster_rsa_claim = import_file_as_text(file_path_auth_git_coaster_rsa_claimed_integer, "# ADD RSA PUBLIC IN pBit4096B58Pkcs1SHA256 KEY THAT ARE ACTING AS COASTER AND THE MASTER WALLET")
+text_index_to_eth_claim = import_file_as_text(file_path_auth_git_eth_claimed_integer, """
+                                              # ADD IN THIS FILE THE ETHEREUM ADDRESS CLAIMED THAT YOUR AUTHORIZED
+                                              # 
+                                              # """)
+text_index_to_coaster_eth_claim = import_file_as_text(file_path_auth_git_coaster_eth_claimed_integer, """
+                                                      # ADD ETHEREUM WALLET THAT ARE ACTING AS COASTER AND THE MASTER WALLET
+                                                      # https://eloistree.github.io/SignMetaMaskTextHere/index.html?q=guid_to_sign
+                                                      """)
+                                                      
+# ADD ETHEREUM WALLET THAT ARE ACTING AS COASTER AND THE MASTER WALLET")
+text_index_to_coaster_rsa_claim = import_file_as_text(file_path_auth_git_coaster_rsa_claimed_integer, """
+                                                      # ADD RSA PUBLIC IN pBit4096B58Pkcs1SHA256 KEY THAT ARE ACTING AS COASTER AND THE MASTER WALLET
+                                                      # https://eloistree.github.io/SignMetaMaskTextHere/index.html?q=guid_to_sign
+                                                      # """)
 
 
 
@@ -237,38 +244,6 @@ git_index_to_coaster_rsa = load_file_line_to_coaster_array(text_index_to_coaster
 print (f"Claimed Coaster Eth count: {len(git_index_to_coaster_eth)}")
 print (f"Claimed Coaster RSA count: {len(git_index_to_coaster_rsa)}")
 
-
-
-
-
-def is_message_signed_ethereum(given_message):
-    """
-    return True if the message is signed with ethereum
-    """
-    
-    split_message = given_message.split("|")
-    if len(split_message) < 3:
-        return False
-    message = split_message[0]
-    address = split_message[1]
-    signature = split_message[2]
-    return is_message_signed_ethereum_from_params(message, address, signature )
-
-def is_message_signed_ethereum_from_params(message, address, signature):
-    # Message to verify
-
-    # Encode the message
-    encoded_message = encode_defunct(text=message)
-
-    # Recover the address from the signature
-    recovered_address = w3.eth.account.recover_message(encoded_message, signature=signature)
-    return  recovered_address.lower() == address.lower()
-
-def get_address_from_signed_message(given_message):
-    split_message = given_message.split("|")
-    if len(split_message) < 3:
-        return None
-    return split_message[1]
 
 
 class UserHandshake:
@@ -464,10 +439,34 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         return
 
                
-
-                if split_lenght == 3:
+                if split_lenght == 0:
+                    pass
+                                
+                elif split_lenght == 3 and pBit4096B58Pkcs1SHA256.is_signed_clipboard_ethereum_text(message):
+                        """
+                        CHECK IF THE ADDRESS IS A VALIDE ETHEREUM ADDRESS
+                        """
+                        address = pBit4096B58Pkcs1SHA256.get_address_from_clipboard_signed_message(message)
+                        print(f"User {address} signed the handshake")
+                        self.user.address = address
+                        if address not in user_address_to_index:
+                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED (1)")
+                            await self.write_message(f"RTFM:{RTFM}")
+                            self.close()
+                            return
+                        self.user.index = int(user_address_to_index[address])
+                        self.user.is_verified = True
+                        guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
+                        if not bool_allow_guest_user and self.user.index < 0:
+                            await self.write_message("GUEST DISABLED")
+                            self.close()
+                            return
+                        self.user.waiting_for_clipboard_sign_message = False
+                        add_user_to_index(self.user)
+                        await self.write_message(f"HELLO {self.user.index} {self.user.address}")
+                elif split_lenght == 3:
                     address = split_message[1].strip()
-                    if is_verify_b58rsa4096_signature_no_letter_marque(to_signed_guid, message) and bool_allow_rsa_user:
+                    if pBit4096B58Pkcs1SHA256.is_verify_b58rsa4096_signature_no_letter_marque(to_signed_guid, message) and bool_allow_rsa_user:
                         
                         """
                         THE RSA ADDRESS IS VALIDE AND DONT USER LETTER MARQUE
@@ -492,42 +491,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         add_user_to_index(self.user)
                         await self.write_message(f"HELLO {self.user.index} {self.user.address}")
 
-                    elif is_ethereum_address(address):
-                        """
-                        CHECK IF THE ADDRESS IS A VALIDE ETHEREUM ADDRESS
-                        """
 
-                        print ("Try to log as admin")
-                        print(f"Sign in message received: {message}")
-                        if not is_message_signed_ethereum(message):
-                            await self.write_message("FAIL TO SIGN")
-                            self.close()
-                            return
-                        address = get_address_from_signed_message(message)
-                        print(f"User {address} signed the handshake")
-                        self.user.address = address
-                        if address not in user_address_to_index:
-                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED (1)")
-                            await self.write_message(f"RTFM:{RTFM}")
-                            self.close()
-                            return
-                        self.user.index = int(user_address_to_index[address])
-                        self.user.is_verified = True
-                        guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
-                        if not bool_allow_guest_user and self.user.index < 0:
-                            await self.write_message("GUEST DISABLED")
-                            self.close()
-                            return
-                        self.user.waiting_for_clipboard_sign_message = False
-                        add_user_to_index(self.user)
-                        await self.write_message(f"HELLO {self.user.index} {self.user.address}")
-
-                elif split_lenght == 5 :
-                    if is_verify_b58rsa4096_signature(to_signed_guid, message):
+                elif split_lenght == 5 and pBit4096B58Pkcs1SHA256.is_verify_b58rsa4096_signature(to_signed_guid, message):
                         """
                         THE ADDRESS IS A RSA COASTER ADDRESS POINTING TO A ETHEREUM ADDRESS AND IS VALIDE
                         """
-                        await self.write_message("VALIDE GUID SIGN IN")
                        
                         # 0:guid, 
                         # 1:coaster_address,
@@ -559,40 +527,18 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         add_user_to_index(self.user)
                         await self.write_message(f"HELLO {self.user.index} {self.user.address} {coaster_address}")
 
-                    elif split_lenght == 5:
+                elif split_lenght == 5 and pBit4096B58Pkcs1SHA256.is_double_ethereum_letter_marque_handshake(to_signed_guid,message):
                         """
                         CHECK IF THE COASTER USING AN ETHEREUM ADDRESS TO METAMASK IS VALIDE
                         """
 
-
-                        print ("Try to log as coaster key")
                         # 0:guid, 
                         # 1:coaster_address,
                         # 2:signature_by_coaster,
                         # 3:admin_address, 
                         # 4:signature_letter_maque
-                        coaster_address = split_message[1].strip()
-                        signed_guid_by_coaster_address = split_message[2].strip()
-                        admin_address = split_message[3].strip()
-                        signature_letter_maque = split_message[4].strip()
-                    
-                        if admin_address not in user_address_to_index:
-                            await self.write_message("ASK ADMIN FOR A CLAIM TO BE ADDED(6): "+admin_address)
-                            await self.write_message(f"RTFM:{RTFM}")
-                            self.close()
-                            return
 
-                        if not is_message_signed_ethereum_from_params(coaster_address, admin_address, signature_letter_maque):
-                            await self.write_message("LETTER MARQUE SIGNATURE INVALID")
-                            self.close()
-                            return
-                        
-                        if not is_message_signed_ethereum_from_params(to_signed_guid, coaster_address, signed_guid_by_coaster_address):
-                            await self.write_message("GUID NOT SIGNED BY COASTER")
-                            self.close()
-                            return
                         await self.write_message(f"COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
-
 
                         self.user.address = admin_address
                         self.user.index = int(user_address_to_index[self.user.address])
