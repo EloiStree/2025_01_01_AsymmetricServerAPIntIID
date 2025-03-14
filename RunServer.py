@@ -404,9 +404,16 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                 # SHA256:7074ce50c023524f306f63ed875fb9d244b606a54e0fae5e2f1d4d3359f59649
                 if len(message)>7 and message.upper().strip().startswith("SHA256:"):
                     hash_recovered_password = str(message[7:].strip())
-                    hash_recovered = pBit4096B58Pkcs1SHA256.get_password_sha256_hash(hash_recovered_password)
-                    print(f"SHA256:{hash_recovered} {hash_recovered_password}")
-                    bool_is_in = user_sha256_to_index.get(hash_recovered) is not None
+                    
+                    bool_is_in = user_sha256_to_index.get(hash_recovered_password) is not None
+                    if bool_is_in:
+                        hash_recovered = hash_recovered_password
+                        print(f"SHA256:{hash_recovered}")
+                    else:
+                        hash_recovered = pBit4096B58Pkcs1SHA256.get_password_sha256_hash(hash_recovered_password)
+                        print(f"SHA256:{hash_recovered} {hash_recovered_password}")
+                        bool_is_in = user_sha256_to_index.get(hash_recovered) is not None
+
                     if bool_is_in:
                         index = user_sha256_to_index[hash_recovered]
                         self.user.index = int(index)
