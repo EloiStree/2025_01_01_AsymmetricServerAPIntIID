@@ -2,8 +2,10 @@ Unity3D Client: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth
 Rasbperry Pi Pico Client: To add Later.  
 Python Client: To add later.  
 
+```
 sudo apt install ufw -y
 sudo ufw allow 4615
+```
 
 -------------------------------
 
