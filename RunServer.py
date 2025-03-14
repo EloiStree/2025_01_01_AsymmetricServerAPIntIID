@@ -368,9 +368,13 @@ def add_user_to_index(user: UserHandshake):
     print (f"Add user to index {user.index} {len(index_handshake_to_valide_user_list[index_str])}")
 
 def remove_user_from_index(user: UserHandshake):
-    if user.index in index_handshake_to_valide_user_list:
-        index_handshake_to_valide_user_list[user.index].remove(user)
-        print (f"Remove user from index {user.index} {len(index_handshake_to_valide_user_list[user.index])}")
+    index_str = str(user.index)
+    if index_str in index_handshake_to_valide_user_list:
+        if user in index_handshake_to_valide_user_list[index_str]:
+            index_handshake_to_valide_user_list[index_str].remove(user)
+            print(f"Remove user from index {user.index} {len(index_handshake_to_valide_user_list[index_str])}")
+        if not index_handshake_to_valide_user_list[index_str]:  # Clean up empty lists
+            del index_handshake_to_valide_user_list[index_str]
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
         def open(self):
@@ -385,6 +389,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             print (f"New connection from {self.user.remote_address}")
  
             print(user_to_json(self.user))
+            
+        def is_connection_lost(self):
+            return self.user.exit_handler or self.user.websocket is None
             
 
         async def on_message(self, message):
@@ -521,7 +528,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                             self.close()
                             return
 
-                        await self.write_message(f"COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
+                        await self.write_message(f"RSA COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
 
 
                         self.user.address = admin_address
@@ -547,7 +554,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         # 3:admin_address, 
                         # 4:signature_letter_maque
 
-                        await self.write_message(f"COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
+                        coaster_address = split_message[1].strip()
+                        admin_address = split_message[3].strip()
+                        await self.write_message(f"EHT COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
 
                         self.user.address = admin_address
                         self.user.index = int(user_address_to_index[self.user.address])

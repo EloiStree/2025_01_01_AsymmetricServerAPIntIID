@@ -175,7 +175,7 @@ class pBit4096B58Pkcs1SHA256:
         bool_is_ethereum_address = received_public_address.startswith("0x")
         if bool_is_ethereum_address:
             ## Apparently it is an ethereum address, let's leave.
-            pBit4096B58Pkcs1SHA256.debug_log ("Ethereum Address: ", received_public_address)
+            pBit4096B58Pkcs1SHA256.debug_log ("Ethereum Address: "+ received_public_address)
             return False
 
         ## All the pBitRSA that are public start with pBit4096B58Pkcs1SHA256
