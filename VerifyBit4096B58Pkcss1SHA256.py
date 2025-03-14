@@ -256,6 +256,8 @@ class pBit4096B58Pkcs1SHA256:
 
         ## If it is not a valie RSA signature on the first 3 arguments, we can leave.
         bool_valide_rsa_signature = pBit4096B58Pkcs1SHA256.is_verify_b58rsa4096_signature_no_letter_marque(guid_sent, received_guid_handshake)
+
+        print("Humm 1")
         if not bool_valide_rsa_signature:
             ## Apparently the RSA signature is allready not valide, let's leave.
             return False    
@@ -275,19 +277,23 @@ class pBit4096B58Pkcs1SHA256:
         # 0x86644c8831bd3b4c876fcf72d41604d40636d78681acd3756e83b54f267365c558a10b401f5ef797fce02b0a8d6b2a69a8ee79b9607b15eda7c7e88c25c80d2a1b
         # """.strip()
         
+        print("Humm 2")
         
         # All we need to do as the handshake is validated on the RSA key,
         # is to verify the Ethereum account authorized to use the RSA key in his name.
 
         # Letter Marque handshake is compose of 5 pieces, let's count them.
+        
         hankshake_splits = received_guid_handshake.split("|")
-        if hankshake_splits!=5:
+        print(f"H{len(hankshake_splits)}:{hankshake_splits}")
+        if len(hankshake_splits)!=5:
             # Apparently it is not a 5 pieces handshake. Let's leave.
             return False
         rsa_pbit_key = hankshake_splits[1].strip()
         received_master_address = hankshake_splits[3].strip()
         received_master_signature = hankshake_splits[4].strip()
 
+        print("Humm 3")
     
         pBit4096B58Pkcs1SHA256.debug_log(">> Letter Marque")
         pBit4096B58Pkcs1SHA256.debug_log(f"Message: {rsa_pbit_key}")
