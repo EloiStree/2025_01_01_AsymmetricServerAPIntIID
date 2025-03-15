@@ -29,13 +29,21 @@ from VerifyBit4096B58Pkcss1SHA256 import pBit4096B58Pkcs1SHA256
 from typing import Dict
 
 
-stop_service_script ="""
-sudo systemctl stop apintio_push_iid.service
-sudo systemctl stop apintio_push_iid.timer
-"""
 
-# run code to stop current service
-os.system(stop_service_script)
+import sys
+
+if sys.stdout.isatty():
+    print("Running in a terminal.")
+    stop_service_script ="""
+    sudo systemctl stop apintio_push_iid.service
+    sudo systemctl stop apintio_push_iid.timer
+    """
+
+    # run code to stop current service
+    os.system(stop_service_script)
+
+else:
+    print("Not running in a terminal.")
 
 
 # When you do some game you can trust user.
