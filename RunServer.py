@@ -125,9 +125,12 @@ def load_file_line_to_index_array(text, user_count_label=""):
     lines = text.split("\n")
     for line in lines:
         if ":" in line:
-            index, address = line.split(":")
-            index_to_address_ref[str(index)] = str(address.strip())
-            address_to_index_ref[str(address)] = str(index.strip())
+            t =line.split(":")
+            if len(t)==2:
+                index= t[0]
+                address= t[1]
+                index_to_address_ref[str(index)] = str(address.strip())
+                address_to_index_ref[str(address)] = str(index.strip())
             
     print (f"Claimed {user_count_label} count: {len(index_to_address_ref)}")
     return index_to_address_ref, address_to_index_ref
