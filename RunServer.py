@@ -166,6 +166,7 @@ in_code_add_index_to_eth="""
  15:0xB2B8EEB186236BB7EdBd8ac6d46147F9dC03d42E  
  16:0xaF3fBC01B8f6bcBaFF5aa4C71529b79067B8f670
  17:0x8Fd7205237FdF4158b114a95A776ED2153CB36A3
+ -45:0x28F3fD5936154907Ee4C649340253f23581B6c70
 """.replace(" ", "")
 
 in_code_add_index_to_rsa4096="""
@@ -601,7 +602,7 @@ async def handle_byte_message(user: UserHandshake, message: bytes):
             return
 
         if message_length == 4 or message_length == 8:
-            current_time = int(get_ntp_time_from_local())
+            current_time = int(get_local_timestamp_in_ms_utc_since1970())
             int_value = 0
             if message_length == 4:
                 int_value = struct.unpack('<i', message)[0]
