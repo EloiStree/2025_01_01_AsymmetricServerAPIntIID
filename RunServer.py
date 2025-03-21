@@ -38,6 +38,11 @@ if sys.stdout.isatty():
     sudo systemctl stop apintio_push_iid.service
     sudo systemctl stop apintio_push_iid.timer
     """
+    
+    """
+    sudo systemctl restart apintio_push_iid.service
+    sudo systemctl restart apintio_push_iid.timer
+    """
 
     # run code to stop current service
     os.system(stop_service_script)
