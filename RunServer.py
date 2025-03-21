@@ -60,6 +60,8 @@ bool_override_ntp_past_date=False
 ## You better use this offline ^^.
 bool_open_bar_mode=True
 int_player_index_for_open_bar_mode=-42
+## Would be better if I let's the user choose the id.
+## But I don't have time for this code now (2025-03-21)
 
 ntp_server = "be.pool.ntp.org"
 ntp_server = "127.0.0.1"
