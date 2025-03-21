@@ -56,6 +56,10 @@ else:
 bool_override_ntp_past_date=False
 
 
+## No authentification needed.
+## You better use this offline ^^.
+bool_open_bar_mode=True
+int_player_index_for_open_bar_mode=-42
 
 ntp_server = "be.pool.ntp.org"
 ntp_server = "127.0.0.1"
@@ -271,10 +275,15 @@ def debug_print(text):
         
         
 async def hangle_text_message(user: UserHandshake, message: str):
+    global bool_open_bar_mode
+    if bool_open_bar_mode:
+        await user.websocket.write_message(f"OPEN BAR MODE: NO KICK BUT ONLY WE USE ONLY 16 BYTES LENGHT")
+        return
+       
     if not allow_text_message:
         await user.websocket.write_message(f"ONLY BYTE SERVER AND MAX:{int_max_byte_size}")
         await user.websocket.write_message(f"RTFM:{RTFM}")
-        user.websocket.close()
+        
         return
     if len(message) > int_max_char_size:
         await user.websocket.write_message(f"MAX TEXT SIZE {int_max_char_size}")
@@ -378,18 +387,29 @@ def remove_user_from_index(user: UserHandshake):
             del index_handshake_to_valide_user_list[index_str]
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
-        def open(self):
+        async def open(self):
             print("WebSocket opened")
             self.user = UserHandshake()
             self.user.websocket = self
             self.user.exit_handler=False
             self.user.handshake_guid = str(uuid.uuid4())
-            self.write_message(f"SIGN:{self.user.handshake_guid}")
             self.user.waiting_for_clipboard_sign_message = True
             self.user.remote_address = self.request.remote_ip
+            
+            if bool_open_bar_mode: 
+                self.user.index = int_player_index_for_open_bar_mode
+                self.user.is_verified = True
+                self.user.waiting_for_clipboard_sign_message=False
+                guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
+                add_user_to_index(self.user)
+                await self.write_message(f"SERVER IS IN OPEN BAR MODE. HAVE FUN.")
+                await self.write_message(f"HELLO {self.user.index}")
+            else:
+                await self.write_message(f"SIGN:{self.user.handshake_guid}")
+            
             print (f"New connection from {self.user.remote_address}")
- 
             print(user_to_json(self.user))
+
             
         def is_connection_lost(self):
             return self.user.exit_handler or self.user.websocket is None
@@ -403,10 +423,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             global user_index_to_sha256
             global user_sha256_to_index
 
-            print("T ", message)
-            if self.user.waiting_for_clipboard_sign_message:
+        
+            if self.user.waiting_for_clipboard_sign_message and not bool_open_bar_mode :
                 if not isinstance(message, str):
-                    print ("R", message)
                     return
                 
                 # SHA256:7074ce50c023524f306f63ed875fb9d244b606a54e0fae5e2f1d4d3359f59649
@@ -571,12 +590,13 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         add_user_to_index(self.user)
                         await self.write_message(f"HELLO {self.user.index} {self.user.address} {coaster_address}")
             else:
+                
                 if self.user.exit_handler or self.user.websocket is None:
                     print("Exit handler")
                     remove_user_from_index(self.user)
                     return
                 # print("Received message", message)
-                if isinstance(message, str):
+                if isinstance(message, str):                    
                     await hangle_text_message(self.user, message)
                 else:
                     await handle_byte_message(self.user, message)
