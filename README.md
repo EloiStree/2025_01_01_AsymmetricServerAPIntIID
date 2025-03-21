@@ -8,11 +8,11 @@
 ---------------
 # Client example
 
-**Setup for Unity3D and Pi**: https://github.com/EloiStree/2025_03_11_NtpWsClientIntegerLobbySetup
-**Unity3D Client**: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth  
-**Rasbperry Pi Pico Client:** https://github.com/EloiStree/2025_03_13_PicoInputNtpWsClientIID  
-**Python / Javascript Client:** https://github.com/EloiStree/2025_03_14_WsNtpIntRaspberryPiClientPyJS
-**Stream Deck Client:** https://github.com/EloiStree/2025_03_15_WsNtpIntStreamDeckClient
+- **Setup for Unity3D and Pi**: https://github.com/EloiStree/2025_03_11_NtpWsClientIntegerLobbySetup
+- **Unity3D Client**: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth  
+- **Rasbperry Pi Pico Client:** https://github.com/EloiStree/2025_03_13_PicoInputNtpWsClientIID  
+- **Python / Javascript Client:** https://github.com/EloiStree/2025_03_14_WsNtpIntRaspberryPiClientPyJS
+- **Stream Deck Client:** https://github.com/EloiStree/2025_03_15_WsNtpIntStreamDeckClient
 
 ------------
 
