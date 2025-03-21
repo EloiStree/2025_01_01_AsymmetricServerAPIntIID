@@ -8,6 +8,11 @@
 # git clone https://github.com/EloiStree/2025_01_01_HelloMegaMaskPushToIID.git /git/push_iid
 
 
+# DEFAULT TIP TO USER TO RUN SERVER
+# NTP: raspberrypi.local
+# Websocket: ws://raspberrypi.local:4615
+
+
 import json
 import socket
 import time
@@ -56,9 +61,16 @@ else:
 bool_override_ntp_past_date=False
 
 
+## No authentification needed.
+## You better use this offline ^^.
+bool_open_bar_mode=True
+int_player_index_for_open_bar_mode=-42
+## Would be better if I let's the user choose the id.
+## But I don't have time for this code now (2025-03-21)
 
 ntp_server = "be.pool.ntp.org"
 ntp_server = "127.0.0.1"
+
 
 def get_ntp_time():
     import ntplib
@@ -161,40 +173,23 @@ def load_file_line_to_coaster_array(text):
             index_to_coaster_ref[str(address.strip())] = str(coaster.strip())
     return index_to_coaster_ref
 
+# -42 are shared keys for video guide and demonstration give by default publically
 
 # If you are like 1-30 address, in code add could be usefull
 # But you should prefer a file system if possible.
 in_code_add_index_to_eth="""
-  1:0xA7c02172ff523586907C201d76AB6EE4A370d0c2  
-  2:0x77C724490291F7D18b9B5320B75D9d2bE609faa5  
-  3:0x7E5F382863E003022757490328d03ebf33D7c2e0  
-  4:0x228Ec05056F54B5660aBFE61b3eda28b4D975048  
-  5:0xC1F1a74CD83d868F6E5E118b6889D5C311C9c6B4  
-  6:0x76B4EF4Ca8b2D33044B1A155319fd6B486d62143  
-  7:0x699E2d3aD536487238529e26FEb9683ccEA384B0  
-  8:0x301a8FEe63D7B2a8af2F2E378B7A366fd8e7953c  
-  9:0x8dc7aEA6fC8AAd7Db06e146Aed524db2CA30A5D4  
- 10:0x82dC329171eCfBf253551D706227713CC6560AEF  
- 11:0xc5E49050B1c9aAdb9e205ffc952Ea7A6DB701762  
- 12:0xddf768166Cc1FfbdFCf42396fB8b215069d6FD7F  
- 13:0xC1c76104106C4e68F8a40E748Ed3Eff22484bD3F  
- 14:0x6CdD12C4CaaF4bcE5669f7f386d73a55ec7D1129  
- 15:0xB2B8EEB186236BB7EdBd8ac6d46147F9dC03d42E  
- 16:0xaF3fBC01B8f6bcBaFF5aa4C71529b79067B8f670
- 17:0x8Fd7205237FdF4158b114a95A776ED2153CB36A3
- -45:0x28F3fD5936154907Ee4C649340253f23581B6c70
+ -42:0x9e85522e84c970431cEac4031Fbd2c24D8943527
 """.replace(" ", "")
 
 in_code_add_index_to_rsa4096="""
--124:pBit4096B58Pkcs1SHA2568arQkFZ8ZJYKVVkCiefn9ckvmUDmF9Qh2QwrDrX63KXs1eUmvAgai9phsXRUzanKkD5qQz8rwc2MQgZh91BTmzSmfdTS3uBxWHTkUkUVvfHWwBVnHUaocqwHW8RJgit845Qus5AWUJn9GRECfapNWp5AGz62iWoimGbWQx45vZkgtswRYuQSXGjh2tL1dLEjUPCNoCPdkY2Q5tJh3m7DyCB1MdFVdtXwRVbKwxkudaVwcuzDimJJgWzzhADT8V9L6Z1M6A1sxtcokk3jpdfKHYaoeYKGQL6sHnHrTDz2XWVPnsLK7PickurddzjC2kL2TBpCkdcdY9fB
+-42:pBit4096B58Pkcs1SHA2568arQkFZ8ZJYKVVkCiefn9ckvmUDmF9Qts8E6dKRN3JxwC1zGbSjVJzqygu6EtfHYaZbk5STKiuMwZgQ2fJqp5HQDFU3QX9ZkUR5PS62Zd4PHaj2AgCTNVRsFbAVemuQNSo5nqAko2MLjARPoV3j7avTcS7wmvA3L2ffCHfxskV46aqr8eKy5oNXmqoajscSiT1MF93aMUoSu6TqfgrkKUjUnUhAY37TcCCk7JjvPrapd8UeEnemKrf7as37R7Fi5stM7ngDi8mvQXfvY7fejvbDLuXf64H22UEzwVYgnerZG8A6SpaZW7hgAADFNZrUfyeybFrQFuYnH
 """
 
 # 7074ce50c023524f306f63ed875fb9d244b606a54e0fae5e2f1d4d3359f59649 Patato 
 # 6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124 Potato
 in_code_add_index_to_sha256="""
 # Generate Password: https://emn178.github.io/online-tools/sha256.html
--123:6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124
--124:872e4e50ce9990d8b041330c47c9ddd11bec6b503ae9386a99da8584e9bb12c4 
+-42:6d61374da4b4df53c6f8fbf4c9b05576d647a07da7498b400abaf7e1f4f44124
 """
 
 
@@ -287,10 +282,15 @@ def debug_print(text):
         
         
 async def hangle_text_message(user: UserHandshake, message: str):
+    global bool_open_bar_mode
+    if bool_open_bar_mode:
+        await user.websocket.write_message(f"OPEN BAR MODE: NO KICK BUT ONLY WE USE ONLY 16 BYTES LENGHT")
+        return
+       
     if not allow_text_message:
         await user.websocket.write_message(f"ONLY BYTE SERVER AND MAX:{int_max_byte_size}")
         await user.websocket.write_message(f"RTFM:{RTFM}")
-        user.websocket.close()
+        
         return
     if len(message) > int_max_char_size:
         await user.websocket.write_message(f"MAX TEXT SIZE {int_max_char_size}")
@@ -394,18 +394,29 @@ def remove_user_from_index(user: UserHandshake):
             del index_handshake_to_valide_user_list[index_str]
 
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
-        def open(self):
+        async def open(self):
             print("WebSocket opened")
             self.user = UserHandshake()
             self.user.websocket = self
             self.user.exit_handler=False
             self.user.handshake_guid = str(uuid.uuid4())
-            self.write_message(f"SIGN:{self.user.handshake_guid}")
             self.user.waiting_for_clipboard_sign_message = True
             self.user.remote_address = self.request.remote_ip
+            
+            if bool_open_bar_mode: 
+                self.user.index = int_player_index_for_open_bar_mode
+                self.user.is_verified = True
+                self.user.waiting_for_clipboard_sign_message=False
+                guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
+                add_user_to_index(self.user)
+                await self.write_message(f"SERVER IS IN OPEN BAR MODE. HAVE FUN.")
+                await self.write_message(f"HELLO {self.user.index}")
+            else:
+                await self.write_message(f"SIGN:{self.user.handshake_guid}")
+            
             print (f"New connection from {self.user.remote_address}")
- 
             print(user_to_json(self.user))
+
             
         def is_connection_lost(self):
             return self.user.exit_handler or self.user.websocket is None
@@ -419,10 +430,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             global user_index_to_sha256
             global user_sha256_to_index
 
-            print("T ", message)
-            if self.user.waiting_for_clipboard_sign_message:
+        
+            if self.user.waiting_for_clipboard_sign_message and not bool_open_bar_mode :
                 if not isinstance(message, str):
-                    print ("R", message)
                     return
                 
                 # SHA256:7074ce50c023524f306f63ed875fb9d244b606a54e0fae5e2f1d4d3359f59649
@@ -587,12 +597,13 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         add_user_to_index(self.user)
                         await self.write_message(f"HELLO {self.user.index} {self.user.address} {coaster_address}")
             else:
+                
                 if self.user.exit_handler or self.user.websocket is None:
                     print("Exit handler")
                     remove_user_from_index(self.user)
                     return
                 # print("Received message", message)
-                if isinstance(message, str):
+                if isinstance(message, str):                    
                     await hangle_text_message(self.user, message)
                 else:
                     await handle_byte_message(self.user, message)

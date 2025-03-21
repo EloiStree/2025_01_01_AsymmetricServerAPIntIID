@@ -1,11 +1,8 @@
+Setup for Unity3D and Pi: https://github.com/EloiStree/2025_03_11_NtpWsClientIntegerLobbySetup
 Unity3D Client: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth  
-Rasbperry Pi Pico Client: To add Later.  
-Python Client: To add later.  
-
-```
-sudo apt install ufw -y
-sudo ufw allow 4615
-```
+Rasbperry Pi Pico Client: https://github.com/EloiStree/2025_03_13_PicoInputNtpWsClientIID  
+Python / Javascript Client: https://github.com/EloiStree/2025_03_14_WsNtpIntRaspberryPiClientPyJS
+Stream Deck Client: https://github.com/EloiStree/2025_03_15_WsNtpIntStreamDeckClient
 
 -------------------------------
 
@@ -23,6 +20,19 @@ Let's change session to the admin
 sudo su root
 ```
 
+
+Update our PI
+```
+sudo apt update && sudo apt upgrade -y
+```
+
+Open the port 4615 for the incoming app.
+And to do that you need ufw to be install.
+```
+sudo apt install ufw -y
+sudo ufw allow 4615
+```
+
 Let's copy the project on the PI:
 ```
 rm /git/push_iid -r
@@ -30,6 +40,8 @@ mkdir /git/push_iid
 git clone https://github.com/EloiStree/2025_01_01_HelloMetaMaskPushToIID.git /git/push_iid
 cd /git/push_iid
 ```
+
+
 
 Let's install the python module needed:
 ```
