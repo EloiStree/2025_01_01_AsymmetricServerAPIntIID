@@ -1,15 +1,25 @@
-Setup for Unity3D and Pi: https://github.com/EloiStree/2025_03_11_NtpWsClientIntegerLobbySetup
-Unity3D Client: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth  
-Rasbperry Pi Pico Client: https://github.com/EloiStree/2025_03_13_PicoInputNtpWsClientIID  
-Python / Javascript Client: https://github.com/EloiStree/2025_03_14_WsNtpIntRaspberryPiClientPyJS
-Stream Deck Client: https://github.com/EloiStree/2025_03_15_WsNtpIntStreamDeckClient
 
--------------------------------
+------------------------
+
+⚠️ The code is compatible with MetaMask and Ethereum, but it also works without them! 😅 ⚠️
+
+(I’ll be creating a Visual Studio tool to generate keys offline for those who prefer to avoid MetaMask and Ethereum. I'm simply using asymmetric key authentication—RSA for Unity3D and ECC for the web. 🤗🧙‍♂️)
+
+---------------
+# Client example
+
+**Setup for Unity3D and Pi**: https://github.com/EloiStree/2025_03_11_NtpWsClientIntegerLobbySetup
+**Unity3D Client**: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth  
+**Rasbperry Pi Pico Client:** https://github.com/EloiStree/2025_03_13_PicoInputNtpWsClientIID  
+**Python / Javascript Client:** https://github.com/EloiStree/2025_03_14_WsNtpIntRaspberryPiClientPyJS
+**Stream Deck Client:** https://github.com/EloiStree/2025_03_15_WsNtpIntStreamDeckClient
+
+------------
 
 # 2025_01_01_HelloMegaMaskPushToIID
 
 See: https://github.com/EloiStree/2025_01_01_HelloMegaMaskListenToIID.git
-This code allows pushing an integer as an Ethereum private key or MetaMask key through a WebSocket.
+This code allows pushing an integer as an **compatible** Ethereum private key or MetaMask key through a WebSocket.
 
 
 If you want to use the project offline, the first thing to do is to step the PI to be a NTP server.
