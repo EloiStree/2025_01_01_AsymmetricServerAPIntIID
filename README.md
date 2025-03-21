@@ -5,6 +5,12 @@
 
 (I’ll be creating a Visual Studio tool to generate keys offline for those who prefer to avoid MetaMask and Ethereum. I'm simply using asymmetric key authentication—RSA for Unity3D and ECC for the web. 🤗🧙‍♂️)
 
+If you don't care of sharing your Raspberry Pi with friend or security because you want to use this code offline on your LAN.
+I added an Open Bar Mode: removing authentification:
+```  
+bool_open_bar_mode=True   
+int_player_index_for_open_bar_mode=-42  
+```  
 ---------------
 # Client example
 
