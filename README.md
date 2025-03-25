@@ -1,18 +1,33 @@
-Unity3D Client: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth  
-Rasbperry Pi Pico Client: To add Later.  
-Python Client: To add later.  
 
-```
-sudo apt install ufw -y
-sudo ufw allow 4615
+------------------------
+
+⚠️ The code is compatible with MetaMask and Ethereum, but it also works without them! 😅 ⚠️
+
+(I’ll be creating a Visual Studio tool to generate keys offline for those who prefer to avoid MetaMask and Ethereum. I'm simply using asymmetric key authentication—RSA for Unity3D and ECC for the web. 🤗🧙‍♂️)
+
+If you don't care of sharing your Raspberry Pi with friend or security because you want to use this code offline on your LAN.  
+I added an Open Bar Mode: removing authentification:  
+
+```  
+bool_open_bar_mode=True   
+int_player_index_for_open_bar_mode=-42  
 ```
 
--------------------------------
+---------------
+# Client example
+
+- **Setup for Unity3D and Pi**: https://github.com/EloiStree/2025_03_11_NtpWsClientIntegerLobbySetup
+- **Unity3D Client**: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth  
+- **Rasbperry Pi Pico Client:** https://github.com/EloiStree/2025_03_13_PicoInputNtpWsClientIID  
+- **Python / Javascript Client:** https://github.com/EloiStree/2025_03_14_WsNtpIntRaspberryPiClientPyJS
+- **Stream Deck Client:** https://github.com/EloiStree/2025_03_15_WsNtpIntStreamDeckClient
+
+------------
 
 # 2025_01_01_HelloMegaMaskPushToIID
 
 See: https://github.com/EloiStree/2025_01_01_HelloMegaMaskListenToIID.git
-This code allows pushing an integer as an Ethereum private key or MetaMask key through a WebSocket.
+This code allows pushing an integer as an **compatible** Ethereum private key or MetaMask key through a WebSocket.
 
 
 If you want to use the project offline, the first thing to do is to step the PI to be a NTP server.
@@ -23,6 +38,19 @@ Let's change session to the admin
 sudo su root
 ```
 
+
+Update our PI
+```
+sudo apt update && sudo apt upgrade -y
+```
+
+Open the port 4615 for the incoming app.
+And to do that you need ufw to be install.
+```
+sudo apt install ufw -y
+sudo ufw allow 4615
+```
+
 Let's copy the project on the PI:
 ```
 rm /git/push_iid -r
@@ -30,6 +58,8 @@ mkdir /git/push_iid
 git clone https://github.com/EloiStree/2025_01_01_HelloMetaMaskPushToIID.git /git/push_iid
 cd /git/push_iid
 ```
+
+
 
 Let's install the python module needed:
 ```
