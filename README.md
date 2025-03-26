@@ -2,7 +2,8 @@
 
 _A websocket server to share integer through a Raspberry PI_
 
-APInt is designed to facilitate the sharing of integers between computers, simplifying multiplayer interactions, IoT applications, and remote control.  
+APInt tools are designed to facilitate the sharing of integers between computers, simplifying multiplayer interactions, IoT applications, and remote control.   
+This one is a relay server with asymetrical authentification.   
 
 IID stands for Index, Integer, and Date:  
 - **Index**: Identifies the user, player, computer, or application.  
