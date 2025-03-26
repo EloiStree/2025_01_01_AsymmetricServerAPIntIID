@@ -1,15 +1,33 @@
-Setup for Unity3D and Pi: https://github.com/EloiStree/2025_03_11_NtpWsClientIntegerLobbySetup
-Unity3D Client: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth  
-Rasbperry Pi Pico Client: https://github.com/EloiStree/2025_03_13_PicoInputNtpWsClientIID  
-Python / Javascript Client: https://github.com/EloiStree/2025_03_14_WsNtpIntRaspberryPiClientPyJS
-Stream Deck Client: https://github.com/EloiStree/2025_03_15_WsNtpIntStreamDeckClient
 
--------------------------------
+------------------------
+
+⚠️ The code is compatible with MetaMask and Ethereum, but it also works without them! 😅 ⚠️
+
+(I’ll be creating a Visual Studio tool to generate keys offline for those who prefer to avoid MetaMask and Ethereum. I'm simply using asymmetric key authentication—RSA for Unity3D and ECC for the web. 🤗🧙‍♂️)
+
+If you don't care of sharing your Raspberry Pi with friend or security because you want to use this code offline on your LAN.  
+I added an Open Bar Mode: removing authentification:  
+
+```  
+bool_open_bar_mode=True   
+int_player_index_for_open_bar_mode=-42  
+```
+
+---------------
+# Client example
+
+- **Setup for Unity3D and Pi**: https://github.com/EloiStree/2025_03_11_NtpWsClientIntegerLobbySetup
+- **Unity3D Client**: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth  
+- **Rasbperry Pi Pico Client:** https://github.com/EloiStree/2025_03_13_PicoInputNtpWsClientIID  
+- **Python / Javascript Client:** https://github.com/EloiStree/2025_03_14_WsNtpIntRaspberryPiClientPyJS
+- **Stream Deck Client:** https://github.com/EloiStree/2025_03_15_WsNtpIntStreamDeckClient
+
+------------
 
 # 2025_01_01_HelloMegaMaskPushToIID
 
 See: https://github.com/EloiStree/2025_01_01_HelloMegaMaskListenToIID.git
-This code allows pushing an integer as an Ethereum private key or MetaMask key through a WebSocket.
+This code allows pushing an integer as an **compatible** Ethereum private key or MetaMask key through a WebSocket.
 
 
 If you want to use the project offline, the first thing to do is to step the PI to be a NTP server.
@@ -80,7 +98,7 @@ Now that the server is present, you need to be sure it launch at start and auto-
 Go to the system service folder aand create a service:
 ```
 cd /lib/systemd/system/
-sudo nano /lib/systemd/system/apintio_push_iid.service
+sudo nano /lib/systemd/system/apint_push_iid.service
 ```
 
 In the service file copy the following:
@@ -102,7 +120,7 @@ WantedBy=multi-user.target
 
 A service is good but you need to check it is running all the time.
 ```
-sudo nano /etc/systemd/system/apintio_push_iid.timer
+sudo nano /etc/systemd/system/apint_push_iid.timer
 ```
 
 You can copy the following that wil check every 10 seconds if the service is running
@@ -128,30 +146,30 @@ sudo systemctl daemon-reload
 
 Let's enable the service and add permission
 ```
-sudo systemctl enable apintio_push_iid.service
+sudo systemctl enable apint_push_iid.service
 chmod +x /git/push_iid/RunServer.py
-sudo systemctl restart apintio_push_iid.service
-sudo systemctl status apintio_push_iid.service
+sudo systemctl restart apint_push_iid.service
+sudo systemctl status apint_push_iid.service
 ```
 
 Same for the timer:
 ```
-sudo systemctl enable apintio_push_iid.timer
-sudo systemctl start apintio_push_iid.timer
-sudo systemctl status apintio_push_iid.timer
+sudo systemctl enable apint_push_iid.timer
+sudo systemctl start apint_push_iid.timer
+sudo systemctl status apint_push_iid.timer
 sudo systemctl list-timers | grep apintio_push_iid
 ```
 
 If you need to stop them to code a new version:
 ```
-sudo systemctl stop apintio_push_iid.service
-sudo systemctl stop apintio_push_iid.timer
+sudo systemctl stop apint_push_iid.service
+sudo systemctl stop apint_push_iid.timer
 ```
 
 When you want to reenable them:
 ```
-sudo systemctl restart apintio_push_iid.service
-sudo systemctl restart apintio_push_iid.timer
+sudo systemctl restart apint_push_iid.service
+sudo systemctl restart apint_push_iid.timer
 ```
 
 As you run earlier the code it produced 4 white listes files in a gitignored fileder.

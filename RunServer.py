@@ -39,8 +39,8 @@ import sys
 if sys.stdout.isatty():
     print("Running in a terminal.")
     stop_service_script ="""
-    sudo systemctl stop apintio_push_iid.service
-    sudo systemctl stop apintio_push_iid.timer
+    sudo systemctl stop apint_push_iid.service
+    sudo systemctl stop apint_push_iid.timer
     """
     
     """
