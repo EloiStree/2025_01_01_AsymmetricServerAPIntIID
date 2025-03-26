@@ -5,8 +5,8 @@ IID stands for Index, Integer, and Date:
 - **Integer**: Represents the value being shared.  
 - **Date**: A timestamp in milliseconds (synced via NTP), indicating when the value was sent (if in the past) or when it should be executed (if in the future).
 
-Any package of 4-8-12-16 bytes are allows ([Read more on IID](https://github.com/eloistree/iid)).
-Text on the websocket server are only allowed to authentify.
+Any package of 4-8-12-16 bytes are allows ([Read more on IID](https://github.com/eloistree/iid)).  
+Text on the websocket server are only allowed to authentify.  
 
 
 ---------------
