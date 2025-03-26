@@ -45,8 +45,8 @@ if sys.stdout.isatty():
     
     """
     # WHEN YOU NEED TO RESTART IT.
-sudo systemctl restart apintio_push_iid.service
-sudo systemctl restart apintio_push_iid.timer
+sudo systemctl restart apint_push_iid.service
+sudo systemctl restart apint_push_iid.timer
 
     """
 
