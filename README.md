@@ -8,6 +8,10 @@ IID stands for Index, Integer, and Date:
 Any package of 4-8-12-16 bytes are allows ([Read more on IID](https://github.com/eloistree/iid)).  
 Text on the websocket server are only allowed to authentify.  
 
+⚠️😅 I use ECC and RSA asymmetric keys for authentication to prevent storing vulnerable data on the server.
+Since I plan to develop ranked esports games in the future, I utilize the same ECC technology used by Ethereum and MetaMask.
+This is an advanced feature but completely optional—you can disable passwords or stick with the classic SHA256 authentication. ⚠️
+_Note: Sometime ECC is best (website), sometime it is RSA (Unity3D) but if you want a authentification where you don't store password you need one of them._
 
 ---------------
 # Client example
