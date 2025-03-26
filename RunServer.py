@@ -13,6 +13,7 @@
 # Websocket: ws://raspberrypi.local:4615
 
 
+
 import json
 import socket
 import time
@@ -33,8 +34,6 @@ import hashlib
 from VerifyBit4096B58Pkcss1SHA256 import pBit4096B58Pkcs1SHA256
 from typing import Dict
 
-
-
 import sys
 
 if sys.stdout.isatty():
@@ -42,6 +41,13 @@ if sys.stdout.isatty():
     stop_service_script ="""
     sudo systemctl stop apint_push_iid.service
     sudo systemctl stop apint_push_iid.timer
+    """
+    
+    """
+    # WHEN YOU NEED TO RESTART IT.
+sudo systemctl restart apint_push_iid.service
+sudo systemctl restart apint_push_iid.timer
+
     """
 
     # run code to stop current service
@@ -683,9 +689,22 @@ def loop_udp_server():
 
 if __name__ == "__main__":
     
+    def has_internet():
+        try: 
+            
+            ip = get_public_ip()
+            return ip != None
+            
+        except Exception as e:
+            return False
+            
+            
     def get_public_ip():
-        response = requests.get('https://api.ipify.org?format=json')
-        return response.json()['ip']
+        try:
+            response = requests.get('https://api.ipify.org?format=json')
+            return response.json()['ip']
+        except Exception as e:
+            return None
 
     public_ip = get_public_ip()
     print(f"Public IP: {public_ip}")
