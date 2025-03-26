@@ -1,17 +1,13 @@
+APInt is designed to facilitate the sharing of integers between computers, simplifying multiplayer interactions, IoT applications, and remote control.  
 
-------------------------
+IID stands for Index, Integer, and Date:  
+- **Index**: Identifies the user, player, computer, or application.  
+- **Integer**: Represents the value being shared.  
+- **Date**: A timestamp in milliseconds (synced via NTP), indicating when the value was sent (if in the past) or when it should be executed (if in the future).
 
-⚠️ The code is compatible with MetaMask and Ethereum, but it also works without them! 😅 ⚠️
+Any package of 4-8-12-16 bytes are allows ([Read more on IID](https://github.com/eloistree/iid)).
+Text on the websocket server are only allowed to authentify.
 
-(I’ll be creating a Visual Studio tool to generate keys offline for those who prefer to avoid MetaMask and Ethereum. I'm simply using asymmetric key authentication—RSA for Unity3D and ECC for the web. 🤗🧙‍♂️)
-
-If you don't care of sharing your Raspberry Pi with friend or security because you want to use this code offline on your LAN.  
-I added an Open Bar Mode: removing authentification:  
-
-```  
-bool_open_bar_mode=True   
-int_player_index_for_open_bar_mode=-42  
-```
 
 ---------------
 # Client example
@@ -24,9 +20,9 @@ int_player_index_for_open_bar_mode=-42
 
 ------------
 
-# 2025_01_01_HelloMegaMaskPushToIID
+# 2025_01_01_APIntPushIID
 
-See: https://github.com/EloiStree/2025_01_01_HelloMegaMaskListenToIID.git
+See: 2025_01_01_APIntPushIID.git
 This code allows pushing an integer as an **compatible** Ethereum private key or MetaMask key through a WebSocket.
 
 
@@ -282,6 +278,18 @@ Let's try to connect to it from a python script.
 
 
 
+
+# Open Bar Mode
+⚠️ The code is compatible with MetaMask and Ethereum, but it also works without them! 😅 ⚠️
+(I’ll be creating a Visual Studio tool to generate keys offline for those who prefer to avoid MetaMask and Ethereum. I'm simply using asymmetric key authentication—RSA for Unity3D and ECC for the web. 🤗🧙‍♂️)
+
+If you don't care of sharing your Raspberry Pi with friend or security because you want to use this code offline on your LAN.  
+I added an Open Bar Mode: removing authentification:  
+
+```  
+bool_open_bar_mode=True   
+int_player_index_for_open_bar_mode=-42  
+```
 
 
 
