@@ -2,8 +2,12 @@
 
 _A websocket server to share integer through a Raspberry PI_
 
-APInt tools are designed to facilitate the sharing of integers between computers, simplifying multiplayer interactions, IoT applications, and remote control.   
-This one is a relay server with asymetrical authentification.   
+APInt tools are designed to facilitate the sharing of integers between computers:
+- simplifying multiplayer with only integer,
+- IoT applications,
+- remote control,
+- QA testing ,
+- ...
 
 IID stands for Index, Integer, and Date:  
 - **Index**: Identifies the user, player, computer, or application.  
@@ -28,12 +32,6 @@ _Note: Sometime ECC is best (website), sometime it is RSA (Unity3D) but if you w
 - **Stream Deck Client:** https://github.com/EloiStree/2025_03_15_WsNtpIntStreamDeckClient
 
 ------------
-
-# 2025_01_01_APIntPushIID
-
-See: 2025_01_01_APIntPushIID.git
-This code allows pushing an integer as an **compatible** Ethereum private key or MetaMask key through a WebSocket.
-
 
 If you want to use the project offline, the first thing to do is to step the PI to be a NTP server.
 [https://github.com/EloiStree/2025_01_01_HelloPiOsNtpServer](https://github.com/EloiStree/2025_01_01_HelloPiOsNtpServer)  
