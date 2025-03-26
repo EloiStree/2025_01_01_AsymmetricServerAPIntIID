@@ -58,7 +58,7 @@ bool_override_ntp_past_date=False
 
 ## No authentification needed.
 ## You better use this offline ^^.
-bool_open_bar_mode=True
+bool_open_bar_mode=False
 int_player_index_for_open_bar_mode=-42
 ## Would be better if I let's the user choose the id.
 ## But I don't have time for this code now (2025-03-21)
@@ -578,9 +578,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
                         coaster_address = split_message[1].strip()
                         admin_address = split_message[3].strip()
-                        await self.write_message(f"EHT COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
+                        await self.write_message(f"ECC COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
 
                         self.user.address = admin_address
+                        if not(self.user.address in user_address_to_index):
+                            print(f"{user_address_to_index}")
+                            print(f"Not in register:{admin_address}" )
+                            await self.write_message(f"Not in allowed user")
+                            self.close()
+                            return
                         self.user.index = int(user_address_to_index[self.user.address])
                         self.user.is_verified = True
                         guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
