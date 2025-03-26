@@ -1,3 +1,7 @@
+# APInt Push IID
+
+_A websocket server to share integer through a Raspberry PI_
+
 APInt is designed to facilitate the sharing of integers between computers, simplifying multiplayer interactions, IoT applications, and remote control.  
 
 IID stands for Index, Integer, and Date:  
