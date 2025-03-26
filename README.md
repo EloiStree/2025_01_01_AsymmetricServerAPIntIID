@@ -58,7 +58,7 @@ Let's copy the project on the PI:
 ```
 rm /git/push_iid -r
 mkdir /git/push_iid 
-git clone https://github.com/EloiStree/2025_01_01_HelloMetaMaskPushToIID.git /git/push_iid
+git clone https://github.com/EloiStree/2025_01_01_APIntPushIID /git/push_iid
 cd /git/push_iid
 ```
 
@@ -100,8 +100,8 @@ Now that the server is present, you need to be sure it launch at start and auto-
 
 Go to the system service folder aand create a service:
 ```
-cd /lib/systemd/system/
-sudo nano /lib/systemd/system/apint_push_iid.service
+cd /etc/systemd/system/
+sudo nano /etc/systemd/system/apint_push_iid.service
 ```
 
 In the service file copy the following:
@@ -143,7 +143,7 @@ WantedBy=timers.target
 Now that the service is running, you need to reload the system file:
 
 ```
-cd /lib/systemd/system/
+cd /etc/systemd/system/
 sudo systemctl daemon-reload
 ```
 
