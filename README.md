@@ -56,10 +56,10 @@ sudo ufw allow 4615
 
 Let's copy the project on the PI:
 ```
-rm /git/push_iid -r
-mkdir /git/push_iid 
-git clone https://github.com/EloiStree/2025_01_01_APIntPushIID /git/push_iid
-cd /git/push_iid
+rm /git/apint_asym_push_iid -r
+mkdir /git/apint_asym_push_iid 
+git clone https://github.com/EloiStree/2025_01_01_APIntPushIID /git/apint_asym_push_iid
+cd /git/apint_asym_push_iid
 ```
 
 
@@ -86,7 +86,7 @@ python RunServer.py
 
 You can edit the file and replace `ntp_server`
 ```
-nano /git/push_iid/RunServer.py
+nano /git/apint_asym_push_iid/RunServer.py
 ```
 
 Replace by what you need:
@@ -101,7 +101,7 @@ Now that the server is present, you need to be sure it launch at start and auto-
 Go to the system service folder aand create a service:
 ```
 cd /etc/systemd/system/
-sudo nano /etc/systemd/system/apint_push_iid.service
+sudo nano /etc/systemd/system/apint_asym_push_iid.service
 ```
 
 In the service file copy the following:
@@ -112,10 +112,10 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /git/push_iid/RunServer.py
+ExecStart=/usr/bin/python3 /git/apint_asym_push_iid/RunServer.py
 Restart=always
 User=root
-WorkingDirectory=/git/push_iid
+WorkingDirectory=/git/apint_asym_push_iid
 
 [Install]
 WantedBy=multi-user.target
@@ -123,7 +123,7 @@ WantedBy=multi-user.target
 
 A service is good but you need to check it is running all the time.
 ```
-sudo nano /etc/systemd/system/apint_push_iid.timer
+sudo nano /etc/systemd/system/apint_asym_push_iid.timer
 ```
 
 You can copy the following that wil check every 10 seconds if the service is running
@@ -150,29 +150,29 @@ sudo systemctl daemon-reload
 Let's enable the service and add permission
 ```
 sudo systemctl enable apint_push_iid.service
-chmod +x /git/push_iid/RunServer.py
-sudo systemctl restart apint_push_iid.service
-sudo systemctl status apint_push_iid.service
+chmod +x /git/apint_asym_push_iid/RunServer.py
+sudo systemctl restart apint_asym_push_iid.service
+sudo systemctl status apint_asym_push_iid.service
 ```
 
 Same for the timer:
 ```
-sudo systemctl enable apint_push_iid.timer
-sudo systemctl start apint_push_iid.timer
-sudo systemctl status apint_push_iid.timer
-sudo systemctl list-timers | grep apintio_push_iid
+sudo systemctl enable apint_asym_push_iid.timer
+sudo systemctl start apint_asym_push_iid.timer
+sudo systemctl status apint_asym_push_iid.timer
+sudo systemctl list-timers | grep apint_asym_push_iid
 ```
 
 If you need to stop them to code a new version:
 ```
-sudo systemctl stop apint_push_iid.service
-sudo systemctl stop apint_push_iid.timer
+sudo systemctl stop apint_asym_push_iid.service
+sudo systemctl stop apint_asym_push_iid.timer
 ```
 
 When you want to reenable them:
 ```
-sudo systemctl restart apint_push_iid.service
-sudo systemctl restart apint_push_iid.timer
+sudo systemctl restart apint_asym_push_iid.service
+sudo systemctl restart apint_asym_push_iid.timer
 ```
 
 As you run earlier the code it produced 4 white listes files in a gitignored fileder.
