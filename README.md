@@ -1,16 +1,37 @@
-Setup for Unity3D and Pi: https://github.com/EloiStree/2025_03_11_NtpWsClientIntegerLobbySetup
-Unity3D Client: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth  
-Rasbperry Pi Pico Client: https://github.com/EloiStree/2025_03_13_PicoInputNtpWsClientIID  
-Python / Javascript Client: https://github.com/EloiStree/2025_03_14_WsNtpIntRaspberryPiClientPyJS
-Stream Deck Client: https://github.com/EloiStree/2025_03_15_WsNtpIntStreamDeckClient
+# APInt Push IID
 
--------------------------------
+_A websocket server to share integer through a Raspberry PI_
 
-# 2025_01_01_HelloMegaMaskPushToIID
+APInt tools are designed to facilitate the sharing of integers between computers:
+- simplifying multiplayer with only integer,
+- IoT applications,
+- remote control,
+- QA testing ,
+- ...
 
-See: https://github.com/EloiStree/2025_01_01_HelloMegaMaskListenToIID.git
-This code allows pushing an integer as an Ethereum private key or MetaMask key through a WebSocket.
+IID stands for Index, Integer, and Date:  
+- **Index**: Identifies the user, player, computer, or application.  
+- **Integer**: Represents the value being shared.  
+- **Date**: A timestamp in milliseconds (synced via NTP), indicating when the value was sent (if in the past) or when it should be executed (if in the future).
 
+Any package of 4-8-12-16 bytes are allows ([Read more on IID](https://github.com/eloistree/iid)).  
+Text on the websocket server are only allowed to authentify.  
+
+⚠️😅 I use ECC and RSA asymmetric keys for authentication to prevent storing vulnerable data on the server.
+Since I plan to develop ranked esports games in the future, I utilize the same ECC(elliptic curve cryptography) technology used by Ethereum and MetaMask.
+This is an advanced feature but completely optional—you can disable passwords or stick with the classic SHA256 authentication. ⚠️
+_Note: Sometime ECC is best (website), sometime it is RSA (Unity3D) but if you want a authentification where you don't store password you need one of them._
+
+---------------
+# Client example
+
+- **Setup for Unity3D and Pi**: https://github.com/EloiStree/2025_03_11_NtpWsClientIntegerLobbySetup
+- **Unity3D Client**: https://github.com/EloiStree/OpenUPM_WsMetaMaskAuth  
+- **Rasbperry Pi Pico Client:** https://github.com/EloiStree/2025_03_13_PicoInputNtpWsClientIID  
+- **Python / Javascript Client:** https://github.com/EloiStree/2025_03_14_WsNtpIntRaspberryPiClientPyJS
+- **Stream Deck Client:** https://github.com/EloiStree/2025_03_15_WsNtpIntStreamDeckClient
+
+------------
 
 If you want to use the project offline, the first thing to do is to step the PI to be a NTP server.
 [https://github.com/EloiStree/2025_01_01_HelloPiOsNtpServer](https://github.com/EloiStree/2025_01_01_HelloPiOsNtpServer)  
@@ -35,10 +56,10 @@ sudo ufw allow 4615
 
 Let's copy the project on the PI:
 ```
-rm /git/push_iid -r
-mkdir /git/push_iid 
-git clone https://github.com/EloiStree/2025_01_01_HelloMetaMaskPushToIID.git /git/push_iid
-cd /git/push_iid
+rm /git/apint_asym_push_iid -r
+mkdir /git/apint_asym_push_iid 
+git clone https://github.com/EloiStree/2025_01_01_APIntPushIID /git/apint_asym_push_iid
+cd /git/apint_asym_push_iid
 ```
 
 
@@ -65,7 +86,7 @@ python RunServer.py
 
 You can edit the file and replace `ntp_server`
 ```
-nano /git/push_iid/RunServer.py
+nano /git/apint_asym_push_iid/RunServer.py
 ```
 
 Replace by what you need:
@@ -79,8 +100,8 @@ Now that the server is present, you need to be sure it launch at start and auto-
 
 Go to the system service folder aand create a service:
 ```
-cd /lib/systemd/system/
-sudo nano /lib/systemd/system/apintio_push_iid.service
+cd /etc/systemd/system/
+sudo nano /etc/systemd/system/apint_asym_push_iid.service
 ```
 
 In the service file copy the following:
@@ -91,10 +112,10 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /git/push_iid/RunServer.py
+ExecStart=/usr/bin/python3 /git/apint_asym_push_iid/RunServer.py
 Restart=always
 User=root
-WorkingDirectory=/git/push_iid
+WorkingDirectory=/git/apint_asym_push_iid
 
 [Install]
 WantedBy=multi-user.target
@@ -102,7 +123,7 @@ WantedBy=multi-user.target
 
 A service is good but you need to check it is running all the time.
 ```
-sudo nano /etc/systemd/system/apintio_push_iid.timer
+sudo nano /etc/systemd/system/apint_asym_push_iid.timer
 ```
 
 You can copy the following that wil check every 10 seconds if the service is running
@@ -122,36 +143,36 @@ WantedBy=timers.target
 Now that the service is running, you need to reload the system file:
 
 ```
-cd /lib/systemd/system/
+cd /etc/systemd/system/
 sudo systemctl daemon-reload
 ```
 
 Let's enable the service and add permission
 ```
-sudo systemctl enable apintio_push_iid.service
-chmod +x /git/push_iid/RunServer.py
-sudo systemctl restart apintio_push_iid.service
-sudo systemctl status apintio_push_iid.service
+sudo systemctl enable apint_push_iid.service
+chmod +x /git/apint_asym_push_iid/RunServer.py
+sudo systemctl restart apint_asym_push_iid.service
+sudo systemctl status apint_asym_push_iid.service
 ```
 
 Same for the timer:
 ```
-sudo systemctl enable apintio_push_iid.timer
-sudo systemctl start apintio_push_iid.timer
-sudo systemctl status apintio_push_iid.timer
-sudo systemctl list-timers | grep apintio_push_iid
+sudo systemctl enable apint_asym_push_iid.timer
+sudo systemctl start apint_asym_push_iid.timer
+sudo systemctl status apint_asym_push_iid.timer
+sudo systemctl list-timers | grep apint_asym_push_iid
 ```
 
 If you need to stop them to code a new version:
 ```
-sudo systemctl stop apintio_push_iid.service
-sudo systemctl stop apintio_push_iid.timer
+sudo systemctl stop apint_asym_push_iid.service
+sudo systemctl stop apint_asym_push_iid.timer
 ```
 
 When you want to reenable them:
 ```
-sudo systemctl restart apintio_push_iid.service
-sudo systemctl restart apintio_push_iid.timer
+sudo systemctl restart apint_asym_push_iid.service
+sudo systemctl restart apint_asym_push_iid.timer
 ```
 
 As you run earlier the code it produced 4 white listes files in a gitignored fileder.
@@ -264,6 +285,18 @@ Let's try to connect to it from a python script.
 
 
 
+
+# Open Bar Mode
+⚠️ The code is compatible with MetaMask and Ethereum, but it also works without them! 😅 ⚠️
+(I’ll be creating a Visual Studio tool to generate keys offline for those who prefer to avoid MetaMask and Ethereum. I'm simply using asymmetric key authentication—RSA for Unity3D and ECC for the web. 🤗🧙‍♂️)
+
+If you don't care of sharing your Raspberry Pi with friend or security because you want to use this code offline on your LAN.  
+I added an Open Bar Mode: removing authentification:  
+
+```  
+bool_open_bar_mode=True   
+int_player_index_for_open_bar_mode=-42  
+```
 
 
 

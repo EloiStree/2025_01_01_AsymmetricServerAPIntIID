@@ -13,6 +13,7 @@
 # Websocket: ws://raspberrypi.local:4615
 
 
+
 import json
 import socket
 import time
@@ -33,15 +34,20 @@ import hashlib
 from VerifyBit4096B58Pkcss1SHA256 import pBit4096B58Pkcs1SHA256
 from typing import Dict
 
-
-
 import sys
 
 if sys.stdout.isatty():
     print("Running in a terminal.")
     stop_service_script ="""
-    sudo systemctl stop apintio_push_iid.service
-    sudo systemctl stop apintio_push_iid.timer
+    sudo systemctl stop apint_push_iid.service
+    sudo systemctl stop apint_push_iid.timer
+    """
+    
+    """
+    # WHEN YOU NEED TO RESTART IT.
+sudo systemctl restart apint_push_iid.service
+sudo systemctl restart apint_push_iid.timer
+
     """
     
     """
@@ -63,7 +69,7 @@ bool_override_ntp_past_date=False
 
 ## No authentification needed.
 ## You better use this offline ^^.
-bool_open_bar_mode=True
+bool_open_bar_mode=False
 int_player_index_for_open_bar_mode=-42
 ## Would be better if I let's the user choose the id.
 ## But I don't have time for this code now (2025-03-21)
@@ -583,9 +589,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
                         coaster_address = split_message[1].strip()
                         admin_address = split_message[3].strip()
-                        await self.write_message(f"EHT COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
+                        await self.write_message(f"ECC COASTER SIGNED MASTER:{admin_address} COASTER:{coaster_address}")
 
                         self.user.address = admin_address
+                        if not(self.user.address in user_address_to_index):
+                            print(f"{user_address_to_index}")
+                            print(f"Not in register:{admin_address}" )
+                            await self.write_message(f"Not in allowed user")
+                            self.close()
+                            return
                         self.user.index = int(user_address_to_index[self.user.address])
                         self.user.is_verified = True
                         guid_handshake_to_valide_user[self.user.handshake_guid] = self.user
@@ -682,9 +694,22 @@ def loop_udp_server():
 
 if __name__ == "__main__":
     
+    def has_internet():
+        try: 
+            
+            ip = get_public_ip()
+            return ip != None
+            
+        except Exception as e:
+            return False
+            
+            
     def get_public_ip():
-        response = requests.get('https://api.ipify.org?format=json')
-        return response.json()['ip']
+        try:
+            response = requests.get('https://api.ipify.org?format=json')
+            return response.json()['ip']
+        except Exception as e:
+            return None
 
     public_ip = get_public_ip()
     print(f"Public IP: {public_ip}")
